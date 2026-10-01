@@ -39,7 +39,7 @@ private struct LandingHeader: View {
             Text("Concurrency101")
                 .font(.system(size: 34, weight: .regular, design: .serif))
                 .foregroundStyle(DemoTheme.phosphor)
-            Text("Two runtimes. Same questions — who is waiting, does this touch the UI, can this overlap. Pick a world and run the lessons. Amber is the main thread; cyan is everything else.")
+            Text("Two runtimes. Same questions — who is waiting, does this touch the UI, can this overlap. Pick a world, then Playground, Notes, or Drill. Amber is the main thread; cyan is everything else.")
                 .font(.system(size: 16, design: .serif))
                 .foregroundStyle(Color.white.opacity(0.78))
                 .fixedSize(horizontal: false, vertical: true)
@@ -99,40 +99,8 @@ private struct TrackDoor: View {
     private var cta: String {
         switch track {
         case .gcd: return "Open GCD"
-        case .modern: return "Open Swift"
+        case .modern: return "Open Swift Concurrency"
         }
     }
 }
 
-/// GCD = stacked FIFO lanes. Swift = a line that suspends, then continues.
-private struct TrackGlyph: View {
-    let track: LearningTrack
-
-    var body: some View {
-        Group {
-            if track == .gcd {
-                VStack(alignment: .leading, spacing: 7) {
-                    ForEach(0..<4, id: \.self) { index in
-                        Capsule()
-                            .fill(DemoTheme.phosphor.opacity(index == 1 ? 0.95 : 0.28))
-                            .frame(width: index == 1 ? 92 : 70, height: 5)
-                    }
-                }
-            } else {
-                HStack(spacing: 0) {
-                    Capsule()
-                        .fill(DemoTheme.cyan)
-                        .frame(width: 44, height: 5)
-                    Circle()
-                        .strokeBorder(DemoTheme.cyan, lineWidth: 1.5)
-                        .frame(width: 14, height: 14)
-                    Capsule()
-                        .fill(DemoTheme.cyan.opacity(0.35))
-                        .frame(width: 36, height: 5)
-                }
-            }
-        }
-        .frame(height: 36, alignment: .leading)
-        .accessibilityHidden(true)
-    }
-}

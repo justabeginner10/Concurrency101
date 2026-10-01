@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		059B0A04306D629500978787 /* Concurrency101 in Frameworks */ = {isa = PBXBuildFile; productRef = A1000000000000000000000A /* Concurrency101 */; };
+		059B0A05306D7A0100000003 /* MarkdownUI in Frameworks */ = {isa = PBXBuildFile; productRef = 059B0A05306D7A0100000002 /* MarkdownUI */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -28,6 +29,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				059B0A04306D629500978787 /* Concurrency101 in Frameworks */,
+				059B0A05306D7A0100000003 /* MarkdownUI in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -71,6 +73,7 @@
 			name = Concurrency101Demo;
 			packageProductDependencies = (
 				A1000000000000000000000A /* Concurrency101 */,
+				059B0A05306D7A0100000002 /* MarkdownUI */,
 			);
 			productName = Concurrency101Demo;
 			productReference = A10000000000000000000002 /* Concurrency101Demo.app */;
@@ -102,6 +105,7 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				A1000000000000000000000D /* XCLocalSwiftPackageReference ".." */,
+				059B0A05306D7A0100000001 /* XCRemoteSwiftPackageReference "swift-markdown-ui" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = A10000000000000000000005 /* Products */;
@@ -289,11 +293,27 @@
 		};
 /* End XCLocalSwiftPackageReference section */
 
+/* Begin XCRemoteSwiftPackageReference section */
+		059B0A05306D7A0100000001 /* XCRemoteSwiftPackageReference "swift-markdown-ui" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/gonzalezreal/swift-markdown-ui";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.4.1;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
 /* Begin XCSwiftPackageProductDependency section */
 		A1000000000000000000000A /* Concurrency101 */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = A1000000000000000000000D /* XCLocalSwiftPackageReference ".." */;
 			productName = Concurrency101;
+		};
+		059B0A05306D7A0100000002 /* MarkdownUI */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 059B0A05306D7A0100000001 /* XCRemoteSwiftPackageReference "swift-markdown-ui" */;
+			productName = MarkdownUI;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

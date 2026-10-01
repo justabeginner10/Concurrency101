@@ -64,6 +64,7 @@ struct WorkbenchView: View {
         }
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar(.visible, for: .navigationBar)
         .toolbarBackground(DemoTheme.void, for: .navigationBar)
         .toolbarBackground(.visible, for: .navigationBar)
         #endif

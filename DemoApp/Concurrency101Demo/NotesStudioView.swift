@@ -1,0 +1,433 @@
+import Observation
+import SwiftUI
+
+@MainActor
+@Observable
+final class NotesSession {
+    let track: LearningTrack
+    let sections: [CurriculumSection]
+    var selectedID: String
+    var query: String = ""
+    var sidebarOpen: Bool
+
+    private var cache: [String: String] = [:]
+
+    init(track: LearningTrack, sidebarOpen: Bool) {
+        let sections = CurriculumCatalog.sections(for: track)
+        self.track = track
+        self.sections = sections
+        self.selectedID = sections.first?.notes.first?.id ?? ""
+        self.sidebarOpen = sidebarOpen
+        if let first = sections.first?.notes.first {
+            cache[first.id] = Self.prepared(first, track: track)
+        }
+    }
+
+    var allNotes: [CurriculumNote] {
+        sections.flatMap(\.notes)
+    }
+
+    var selected: CurriculumNote? {
+        CurriculumCatalog.note(id: selectedID, in: track)
+    }
+
+    var markdown: String {
+        cache[selectedID] ?? ""
+    }
+
+    var visibleSections: [CurriculumSection] {
+        let trimmed = query.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return sections }
+        return sections.compactMap { section in
+            let matches = section.notes.filter { note in
+                note.title.localizedCaseInsensitiveContains(trimmed)
+                    || note.id.localizedCaseInsensitiveContains(trimmed)
+                    || note.indexLabel.localizedCaseInsensitiveContains(trimmed)
+            }
+            guard !matches.isEmpty else { return nil }
+            return CurriculumSection(id: section.id, title: section.title, notes: matches)
+        }
+    }
+
+    var previousID: String? {
+        neighbor(offset: -1)
+    }
+
+    var nextID: String? {
+        neighbor(offset: 1)
+    }
+
+    func select(_ id: String, collapseSidebar: Bool) {
+        selectedID = id
+        loadIfNeeded(id)
+        if collapseSidebar {
+            sidebarOpen = false
+        }
+    }
+
+    func openWikilink(_ url: URL, collapseSidebar: Bool) {
+        guard let id = NoteMarkdown.noteID(from: url) else { return }
+        query = ""
+        select(id, collapseSidebar: collapseSidebar)
+    }
+
+    private func neighbor(offset: Int) -> String? {
+        let ids = allNotes.map(\.id)
+        guard let index = ids.firstIndex(of: selectedID) else { return nil }
+        let next = index + offset
+        guard ids.indices.contains(next) else { return nil }
+        return ids[next]
+    }
+
+    private func loadIfNeeded(_ id: String) {
+        guard cache[id] == nil, let note = CurriculumCatalog.note(id: id, in: track) else { return }
+        cache[id] = Self.prepared(note, track: track)
+    }
+
+    private static func prepared(_ note: CurriculumNote, track: LearningTrack) -> String {
+        NoteMarkdown.prepared(CurriculumBundle.loadMarkdown(note), track: track)
+    }
+}
+
+struct NotesStudioView: View {
+    let track: LearningTrack
+    @State private var session: NotesSession
+    @Environment(\.horizontalSizeClass) private var sizeClass
+
+    init(track: LearningTrack) {
+        self.track = track
+        _session = State(initialValue: NotesSession(track: track, sidebarOpen: true))
+    }
+
+    private var overlaySidebar: Bool {
+        #if os(iOS)
+        sizeClass == .compact
+        #else
+        false
+        #endif
+    }
+
+    var body: some View {
+        ZStack {
+            DemoTheme.void.ignoresSafeArea()
+            if overlaySidebar {
+                CompactNotesLayout(session: session, accent: track.accent)
+            } else {
+                RegularNotesLayout(session: session, accent: track.accent)
+            }
+        }
+        .navigationTitle(session.selected.map(\.title) ?? "Notes")
+        .navigationBarTitleDisplayMode(.inline)
+        #if os(iOS)
+        .toolbar(.visible, for: .navigationBar)
+        .toolbarBackground(DemoTheme.void, for: .navigationBar)
+        .toolbarBackground(.visible, for: .navigationBar)
+        .toolbarColorScheme(.dark, for: .navigationBar)
+        .toolbar {
+            if overlaySidebar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button {
+                        withAnimation(.easeInOut(duration: 0.22)) {
+                            session.sidebarOpen.toggle()
+                        }
+                    } label: {
+                        Text(session.sidebarOpen ? "Close index" : "Index")
+                            .font(.system(size: 13, design: .monospaced))
+                            .foregroundStyle(track.accent)
+                    }
+                    .accessibilityLabel(session.sidebarOpen ? "Close notes index" : "Open notes index")
+                }
+            }
+        }
+        #endif
+    }
+}
+
+private struct RegularNotesLayout: View {
+    @Bindable var session: NotesSession
+    let accent: Color
+
+    var body: some View {
+        HStack(spacing: 0) {
+            NotesSidebar(
+                sections: session.visibleSections,
+                selectedID: session.selectedID,
+                query: $session.query,
+                accent: accent,
+                onSelect: { session.select($0, collapseSidebar: false) }
+            )
+            .frame(width: 292)
+
+            Rectangle()
+                .fill(accent.opacity(0.22))
+                .frame(width: 1)
+
+            NoteReaderPane(session: session, accent: accent, collapseOnLink: false)
+        }
+    }
+}
+
+private struct CompactNotesLayout: View {
+    @Bindable var session: NotesSession
+    let accent: Color
+
+    var body: some View {
+        ZStack(alignment: .leading) {
+            NoteReaderPane(session: session, accent: accent, collapseOnLink: true)
+
+            if session.sidebarOpen {
+                Color.black.opacity(0.46)
+                    .ignoresSafeArea()
+                    .onTapGesture {
+                        withAnimation(.easeInOut(duration: 0.22)) {
+                            session.sidebarOpen = false
+                        }
+                    }
+                    .accessibilityLabel("Dismiss notes index")
+
+                NotesSidebar(
+                    sections: session.visibleSections,
+                    selectedID: session.selectedID,
+                    query: $session.query,
+                    accent: accent,
+                    onSelect: { id in
+                        withAnimation(.easeInOut(duration: 0.22)) {
+                            session.select(id, collapseSidebar: true)
+                        }
+                    }
+                )
+                .frame(maxWidth: 320)
+                .background(DemoTheme.void)
+                .transition(.move(edge: .leading).combined(with: .opacity))
+            }
+        }
+        .animation(.easeInOut(duration: 0.22), value: session.sidebarOpen)
+    }
+}
+
+private struct NotesSidebar: View {
+    let sections: [CurriculumSection]
+    let selectedID: String
+    @Binding var query: String
+    let accent: Color
+    let onSelect: (String) -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            NotesSidebarHeader(query: $query, accent: accent)
+
+            if sections.isEmpty {
+                Text("No notes match that search.")
+                    .font(.system(size: 14, design: .serif))
+                    .foregroundStyle(DemoTheme.muted)
+                    .padding(16)
+                Spacer()
+            } else {
+                ScrollView {
+                    LazyVStack(alignment: .leading, spacing: 18) {
+                        ForEach(sections) { section in
+                            NotesSidebarSection(
+                                title: section.title,
+                                notes: section.notes,
+                                selectedID: selectedID,
+                                accent: accent,
+                                onSelect: onSelect
+                            )
+                        }
+                    }
+                    .padding(.horizontal, 12)
+                    .padding(.top, 16)
+                    .padding(.bottom, 28)
+                }
+            }
+        }
+        .background(Color.white.opacity(0.03))
+    }
+}
+
+private struct NotesSidebarHeader: View {
+    @Binding var query: String
+    let accent: Color
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Notes")
+                .font(.system(size: 22, design: .serif))
+                .foregroundStyle(accent)
+            HStack(spacing: 8) {
+                Text("Find")
+                    .font(.system(size: 11, design: .monospaced))
+                    .foregroundStyle(DemoTheme.muted)
+                TextField(
+                    "Search notes",
+                    text: $query,
+                    prompt: Text("Search notes").foregroundStyle(DemoTheme.muted)
+                )
+                    .font(.system(size: 14, design: .serif))
+                    .foregroundStyle(Color.white.opacity(0.9))
+                    .textFieldStyle(.plain)
+            }
+            .padding(.horizontal, 10)
+            .padding(.vertical, 8)
+            .background(Color.white.opacity(0.05))
+            .overlay(
+                Rectangle()
+                    .strokeBorder(accent.opacity(0.28), lineWidth: 1)
+            )
+        }
+        .padding(.horizontal, 14)
+        .padding(.top, 16)
+        .padding(.bottom, 12)
+    }
+}
+
+private struct NotesSidebarSection: View {
+    let title: String
+    let notes: [CurriculumNote]
+    let selectedID: String
+    let accent: Color
+    let onSelect: (String) -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(verbatim: title.uppercased())
+                .font(.system(size: 11, design: .monospaced))
+                .foregroundStyle(DemoTheme.muted)
+                .padding(.horizontal, 8)
+
+            ForEach(notes) { note in
+                NotesSidebarRow(
+                    indexLabel: note.indexLabel,
+                    title: note.title,
+                    isSelected: note.id == selectedID,
+                    accent: accent
+                ) {
+                    onSelect(note.id)
+                }
+            }
+        }
+    }
+}
+
+private struct NotesSidebarRow: View {
+    let indexLabel: String
+    let title: String
+    let isSelected: Bool
+    let accent: Color
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            HStack(alignment: .firstTextBaseline, spacing: 10) {
+                Text(verbatim: indexLabel)
+                    .font(.system(size: 11, design: .monospaced))
+                    .foregroundStyle(isSelected ? DemoTheme.void : accent)
+                    .frame(width: 22, alignment: .leading)
+                Text(verbatim: title)
+                    .font(.system(size: 14, design: .serif))
+                    .foregroundStyle(isSelected ? DemoTheme.void : Color.white.opacity(0.88))
+                    .multilineTextAlignment(.leading)
+                    .fixedSize(horizontal: false, vertical: true)
+                Spacer(minLength: 0)
+            }
+            .padding(.horizontal, 8)
+            .padding(.vertical, 8)
+            .background(isSelected ? accent : Color.clear)
+        }
+        .buttonStyle(.plain)
+        .accessibilityAddTraits(isSelected ? .isSelected : [])
+    }
+}
+
+private struct NoteReaderPane: View {
+    let session: NotesSession
+    let accent: Color
+    let collapseOnLink: Bool
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            if let selected = session.selected {
+                NoteReaderHeader(
+                    indexLabel: selected.indexLabel,
+                    title: selected.title,
+                    accent: accent
+                )
+            }
+
+            ScrollView {
+                NoteArticleView(
+                    markdown: session.markdown,
+                    accent: accent
+                ) { url in
+                    session.openWikilink(url, collapseSidebar: collapseOnLink)
+                }
+                .padding(.horizontal, 20)
+                .padding(.top, 8)
+                .padding(.bottom, 24)
+
+                NotePagerBar(
+                    hasPrevious: session.previousID != nil,
+                    hasNext: session.nextID != nil,
+                    accent: accent,
+                    onPrevious: {
+                        if let id = session.previousID {
+                            session.select(id, collapseSidebar: false)
+                        }
+                    },
+                    onNext: {
+                        if let id = session.nextID {
+                            session.select(id, collapseSidebar: false)
+                        }
+                    }
+                )
+                .padding(.horizontal, 20)
+                .padding(.bottom, 36)
+            }
+            .id(session.selectedID)
+        }
+    }
+}
+
+private struct NoteReaderHeader: View {
+    let indexLabel: String
+    let title: String
+    let accent: Color
+
+    var body: some View {
+        HStack(alignment: .firstTextBaseline, spacing: 10) {
+            Text(verbatim: indexLabel)
+                .font(.system(size: 12, design: .monospaced))
+                .foregroundStyle(accent)
+            Text(verbatim: title)
+                .font(.system(size: 22, design: .serif))
+                .foregroundStyle(accent)
+                .fixedSize(horizontal: false, vertical: true)
+            Spacer(minLength: 0)
+        }
+        .padding(.horizontal, 20)
+        .padding(.top, 16)
+        .padding(.bottom, 12)
+    }
+}
+
+private struct NotePagerBar: View {
+    let hasPrevious: Bool
+    let hasNext: Bool
+    let accent: Color
+    let onPrevious: () -> Void
+    let onNext: () -> Void
+
+    var body: some View {
+        HStack {
+            Button("Previous", action: onPrevious)
+                .foregroundStyle(hasPrevious ? accent : DemoTheme.muted)
+                .disabled(!hasPrevious)
+            Spacer()
+            Button("Next", action: onNext)
+                .foregroundStyle(hasNext ? accent : DemoTheme.muted)
+                .disabled(!hasNext)
+        }
+        .font(.system(size: 13, design: .monospaced))
+        .buttonStyle(.plain)
+    }
+}

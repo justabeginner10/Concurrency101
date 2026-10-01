@@ -44,7 +44,7 @@ struct RootView: View {
         NavigationStack {
             LandingView(track: $track)
                 .navigationDestination(item: $track) { selected in
-                    WorkbenchView(track: selected)
+                    TrackHubView(track: selected)
                 }
         }
         .preferredColorScheme(.dark)
