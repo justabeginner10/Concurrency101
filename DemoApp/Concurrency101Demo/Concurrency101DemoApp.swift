@@ -39,6 +39,7 @@ enum LearningTrack: String, Identifiable, Hashable {
 
 struct RootView: View {
     @State private var track: LearningTrack?
+    @Environment(\.verticalSizeClass) private var verticalSizeClass
 
     var body: some View {
         NavigationStack {
@@ -48,5 +49,9 @@ struct RootView: View {
                 }
         }
         .preferredColorScheme(.dark)
+        .environment(
+            \.usesPhoneChrome,
+            DemoLayout.usesPhoneChrome(verticalSizeClass: verticalSizeClass)
+        )
     }
 }

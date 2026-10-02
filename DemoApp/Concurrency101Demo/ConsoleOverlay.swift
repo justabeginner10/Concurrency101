@@ -1,27 +1,36 @@
 import SwiftUI
 
 struct ConsoleOverlay: View {
+    enum Chrome {
+        case docked
+        case pane
+    }
+
     @ObservedObject var log: DemoLog
     @Binding var expanded: Bool
+    var chrome: Chrome = .docked
+    @AppStorage(DemoSourceType.storageKey) private var sourceFontSize = DemoSourceType.defaultSize
 
     var body: some View {
         VStack(spacing: 0) {
             HStack(alignment: .firstTextBaseline, spacing: 12) {
                 Text("trace")
-                    .font(.system(.caption, design: .serif))
+                    .font(.system(size: DemoLayout.typeSize(12), design: .serif))
                     .foregroundStyle(DemoTheme.phosphor.opacity(0.85))
                 Text("same lines as Xcode")
-                    .font(.system(size: 11, design: .monospaced))
+                    .font(.system(size: DemoLayout.typeSize(11), design: .monospaced))
                     .foregroundStyle(DemoTheme.muted)
                 Spacer()
-                Button(expanded ? "Fold" : "Expand") {
-                    withAnimation(.easeInOut(duration: 0.2)) { expanded.toggle() }
+                if chrome == .docked {
+                    Button(expanded ? "Fold" : "Expand") {
+                        withAnimation(.easeInOut(duration: 0.2)) { expanded.toggle() }
+                    }
+                    .font(.system(size: DemoLayout.typeSize(11), design: .monospaced))
+                    .buttonStyle(.plain)
+                    .foregroundStyle(DemoTheme.cyan)
                 }
-                .font(.system(size: 11, design: .monospaced))
-                .buttonStyle(.plain)
-                .foregroundStyle(DemoTheme.cyan)
                 Button("Clear") { log.clear() }
-                    .font(.system(size: 11, design: .monospaced))
+                    .font(.system(size: DemoLayout.typeSize(11), design: .monospaced))
                     .buttonStyle(.plain)
                     .foregroundStyle(DemoTheme.phosphor)
             }
@@ -35,16 +44,19 @@ struct ConsoleOverlay: View {
                     LazyVStack(alignment: .leading, spacing: 6) {
                         if log.entries.isEmpty {
                             Text("Run a lesson. Lines print here and in the Xcode console.")
-                                .font(.system(size: 12, design: .monospaced))
+                                .font(.system(size: CGFloat(sourceFontSize), design: .monospaced))
                                 .foregroundStyle(DemoTheme.muted)
                                 .padding(.top, 8)
                         }
                         ForEach(Array(log.entries.enumerated()), id: \.element.id) { index, entry in
                             GutteredLine(
                                 number: index + 1,
-                                gutterWidth: log.entries.count >= 100 ? 28 : 22,
+                                gutterWidth: DemoSourceType.gutterWidth(
+                                    fontSize: CGFloat(sourceFontSize),
+                                    lineCount: log.entries.count
+                                ),
                                 attributedText: DemoSyntax.highlight(entry.consoleLine),
-                                fontSize: 11,
+                                fontSize: CGFloat(sourceFontSize),
                                 ruleColor: entry.isMainThread ? DemoTheme.phosphor : DemoTheme.cyan
                             )
                             .id(entry.id)
@@ -64,13 +76,14 @@ struct ConsoleOverlay: View {
             }
         }
         .frame(maxWidth: .infinity)
-        .frame(height: expanded ? 340 : 168)
+        .frame(height: chrome == .docked ? (expanded ? 340 : 168) : nil)
+        .frame(maxHeight: chrome == .pane ? .infinity : nil)
         .background(.ultraThinMaterial, in: Rectangle())
         .overlay(
             Rectangle()
                 .strokeBorder(DemoTheme.phosphor.opacity(0.22), lineWidth: 0.5)
         )
-        .shadow(color: Color.black.opacity(0.35), radius: 18, y: -4)
+        .shadow(color: Color.black.opacity(chrome == .docked ? 0.35 : 0), radius: chrome == .docked ? 18 : 0, y: chrome == .docked ? -4 : 0)
     }
 }
 
@@ -129,7 +142,7 @@ struct NumberedSourceBlock: View {
 
     var body: some View {
         let rows = Self.rows(from: source)
-        let width: CGFloat = rows.count >= 100 ? 28 : 22
+        let width = DemoSourceType.gutterWidth(fontSize: fontSize, lineCount: rows.count)
         VStack(alignment: .leading, spacing: 4) {
             ForEach(rows, id: \.number) { row in
                 GutteredLine(

@@ -102,6 +102,15 @@ func download(_ url: URL) async throws -> Data {
 }
 ```
 
+`task.cancel()` only stops the legacy work. The continuation still has to resume **exactly
+once**. Cancellation of the Swift task does not resume it for you.
+
+- If cancel still fires the callback (`URLSession` often does), resume there as usual.
+- If cancel drops the callback (`DispatchWorkItem.cancel()` before the block runs often
+  does), resume with `CancellationError` from a path you control — otherwise `await` hangs,
+  which is the same zero-resume bug as §2.
+- Either way, make resume once-safe: a late callback must not resume a second time.
+
 Note the ordering hazard: `onCancel` can fire **before** the operation closure starts, if the
 task was already cancelled. Your `cancel()` must tolerate being called at any time, including
 before `start`. More on cancellation in [[09 - Tasks, Cancellation and Priority]].

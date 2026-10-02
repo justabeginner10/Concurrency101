@@ -10,6 +10,8 @@ struct CodeSnippetView: View {
     let appleSnippet: String
     let appleLabel: String
     @Binding var showAppleAPI: Bool
+    var fillsAvailableHeight: Bool = false
+    @AppStorage(DemoSourceType.storageKey) private var sourceFontSize = DemoSourceType.defaultSize
     @State private var copied = false
 
     private var displayed: String {
@@ -20,21 +22,21 @@ struct CodeSnippetView: View {
         VStack(alignment: .leading, spacing: 0) {
             HStack(spacing: 10) {
                 Text(showAppleAPI ? appleLabel : "Concurrency101")
-                    .font(.system(.caption, design: .serif))
+                    .font(.system(size: DemoLayout.typeSize(12), design: .serif))
                     .foregroundStyle(showAppleAPI ? DemoTheme.cyan : DemoTheme.phosphor.opacity(0.85))
 
                 Spacer(minLength: 8)
 
                 HStack(spacing: 6) {
                     Text("101")
-                        .font(.system(size: 11, design: .monospaced))
+                        .font(.system(size: DemoLayout.typeSize(11), design: .monospaced))
                         .foregroundStyle(showAppleAPI ? DemoTheme.muted : DemoTheme.phosphor)
                     Toggle("Show Apple API", isOn: $showAppleAPI)
                         .labelsHidden()
                         .tint(DemoTheme.cyan)
                         .fixedSize()
                     Text(appleLabel == "Apple GCD" ? "GCD" : "Swift")
-                        .font(.system(size: 11, design: .monospaced))
+                        .font(.system(size: DemoLayout.typeSize(11), design: .monospaced))
                         .foregroundStyle(showAppleAPI ? DemoTheme.cyan : DemoTheme.muted)
                 }
 
@@ -45,7 +47,7 @@ struct CodeSnippetView: View {
                         copied = false
                     }
                 }
-                .font(.system(size: 11, design: .monospaced))
+                .font(.system(size: DemoLayout.typeSize(11), design: .monospaced))
                 .buttonStyle(.plain)
                 .foregroundStyle(DemoTheme.cyan)
             }
@@ -57,13 +59,17 @@ struct CodeSnippetView: View {
             ScrollView(.vertical, showsIndicators: true) {
                 NumberedSourceBlock(
                     source: displayed,
-                    fontSize: 12,
+                    fontSize: CGFloat(sourceFontSize),
                     ruleColor: showAppleAPI ? DemoTheme.cyan : DemoTheme.phosphor
                 )
                 .padding(12)
             }
-            .frame(minHeight: 140, maxHeight: 260)
+            .frame(
+                minHeight: fillsAvailableHeight ? 0 : 140,
+                maxHeight: fillsAvailableHeight ? .infinity : 260
+            )
         }
+        .frame(maxHeight: fillsAvailableHeight ? .infinity : nil)
         .background(Color.white.opacity(0.05))
         .overlay(
             RoundedRectangle(cornerRadius: 4, style: .continuous)

@@ -38,7 +38,11 @@ queue.async {
 print("2")
 ```
 
-The caller prints `1`, submits the task, and prints `2`. The queued print happens later. In a real multithreaded program, exact interleaving with unrelated queues is not generally guaranteed, so correctness should never depend on print timing.
+The caller prints `1`, submits the task, and prints `2` without waiting. The queued print is
+not waited for — it often appears after `2`, but it may already be running on another thread.
+Do not treat `1-2-3` as a guarantee. In a real multithreaded program, exact interleaving with
+unrelated queues is not generally guaranteed, so correctness should never depend on print
+timing.
 
 ### Asynchronous serial work
 

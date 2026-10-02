@@ -321,19 +321,25 @@ graph TD
     J --> R["Profile returned"]
 ```
 
-The gotcha that catches everyone:
+The gotcha that catches everyone — these two shapes look similar and are **not** the same:
 
 ```swift
+// Concurrent — both children start before either is awaited
 async let a = fetchA()
-let x = try await a          // ✅ concurrent
-
 async let b = fetchB()
-let y = try await b          // ⚠️ awaited immediately — this is just sequential code
-                             //    with extra steps. No overlap gained.
+let x = try await a
+let y = try await b
+
+// Sequential — B does not start until A has finished
+async let a = fetchA()
+let x = try await a
+async let b = fetchB()
+let y = try await b          // ⚠️ same shape as `try await fetchB()`
+                             //    No overlap. `async let` bought nothing.
 ```
 
-Declaring and awaiting back-to-back gives you nothing. The whole point is to declare *all*
-the concurrent work first, then await.
+A single `async let` followed immediately by `await` of that same name is not concurrent.
+There is only one child in flight. Declare *all* the concurrent work first, then await.
 
 `async let` handles the fixed-count case. For a dynamic number of children you need task
 groups — [[08 - Structured Concurrency]].

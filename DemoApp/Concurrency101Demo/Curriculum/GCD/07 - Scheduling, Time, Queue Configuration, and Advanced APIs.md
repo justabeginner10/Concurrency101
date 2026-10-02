@@ -109,6 +109,7 @@ Important constraints:
 - the calling thread participates or waits; never use it carelessly on the main thread
 - each iteration must access independent storage or synchronize shared state
 - append to a common array is unsafe
+- `Array` subscript is also unsafe from concurrent iterations, even at distinct indices — use `withUnsafeMutableBufferPointer` on a pre-sized buffer, or aggregate results some other isolated way
 - small iterations can lose to scheduling overhead
 - blocking each iteration can create thread pressure
 

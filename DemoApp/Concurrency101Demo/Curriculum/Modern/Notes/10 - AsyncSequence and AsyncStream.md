@@ -199,7 +199,7 @@ awareness is your job. Returning `nil` ends the sequence cleanly.
 | :--- | :--- | :--- |
 | Consumers | One | Many |
 | Cancellation | Task cancellation | `AnyCancellable` |
-| Backpressure | Buffering policy | Demand-based |
+| Buffering | Buffering / dropping policy (not Combine-style demand) | Demand-based |
 | Error typing | Throws or not | Typed `Failure` |
 | Operators | stdlib + async-algorithms | Rich, built in |
 | Future | ✅ the direction Apple is going | Maintained, not evolving |
@@ -224,8 +224,10 @@ observation is for state. Confusing the two produces a lot of unnecessary machin
 **9.4 — A `for await` loop that never ends.** It holds the task alive forever. Make sure the
 producer calls `finish()`, or the consumer `break`s, or the task gets cancelled.
 
-**9.5 — Heavy work inside the loop body.** The loop is serial: slow body = backpressure on the
-producer. Hand off to a task group if each element needs real work.
+**9.5 — Heavy work inside the loop body.** A custom `AsyncSequence` is pull-based: a slow
+`next()` does stall the producer. `AsyncStream` is different — default `.unbounded` buffering
+lets the producer keep yielding; a slow `for await` grows memory, it does not throttle. Hand
+CPU work to a task group or `@concurrent` helper rather than hoping the stream will wait.
 
 **9.6 — Using a stream where you wanted state.** If consumers care about "the current value"
 rather than "every change", you want `@Observable` or an actor property.

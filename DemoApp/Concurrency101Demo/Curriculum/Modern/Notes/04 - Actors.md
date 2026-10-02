@@ -9,7 +9,9 @@
 
 ## 1. What an actor is
 
-A reference type that owns its mutable state and guarantees **one caller at a time**.
+A reference type that owns its mutable state and executes isolated work **one job at a time**.
+`await` inside a method can let other callers in — that is reentrancy, and it is the subject of
+§4. Isolation prevents data races, not stale invariants.
 
 ```swift
 actor ImageCache {

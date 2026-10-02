@@ -32,8 +32,10 @@ Fill this in from §5 of the module **before running**:
 | `conc()` | | | | |
 | `plain()` via `Task.detached` | | | | |
 
-Run it twice — once with each `Default Actor Isolation` setting. Eight cells, all verified by
-you.
+Run it twice — once with each `Default Actor Isolation` setting, **leaving Approachable
+Concurrency on**. Eight cells, all verified by you. Column 2 is *not* “everything goes to the
+pool”: `plain()` and `nonIso()` stay on the `@MainActor` caller unless you also turn
+Approachable off.
 
 ---
 

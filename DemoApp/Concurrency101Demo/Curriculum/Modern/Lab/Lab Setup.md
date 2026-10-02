@@ -99,13 +99,15 @@ Put this in `Sources/ConcurrencyLab/Support.swift`. Every drill uses it.
 import Foundation
 
 /// Where am I *actually* running? Use this constantly while learning.
-func here(_ label: String, function: String = #function) {
+/// `nonisolated` is load-bearing: under Default Isolation = MainActor an unannotated
+/// helper would itself be `@MainActor` and every call would print MAIN.
+nonisolated func here(_ label: String, function: String = #function) {
     let thread = Thread.isMainThread ? "MAIN" : "bg  "
     print("[\(thread)] \(label) — \(function)")
 }
 
 /// Measure a block of async work.
-func timed<T>(_ label: String, _ work: () async throws -> T) async rethrows -> T {
+nonisolated func timed<T>(_ label: String, _ work: () async throws -> T) async rethrows -> T {
     let clock = ContinuousClock()
     var result: T!
     let elapsed = try await clock.measure { result = try await work() }
@@ -114,14 +116,14 @@ func timed<T>(_ label: String, _ work: () async throws -> T) async rethrows -> T
 }
 
 /// Simulated network call — never blocks a pool thread.
-func fakeFetch(_ name: String, ms: Int = 300) async throws -> String {
+nonisolated func fakeFetch(_ name: String, ms: Int = 300) async throws -> String {
     try await Task.sleep(for: .milliseconds(ms))
     return "payload:\(name)"
 }
 
 /// Deliberately CPU-bound work, for the drills that need real contention.
 /// Note: this does NOT suspend, so it occupies its thread for the duration.
-func burnCPU(iterations: Int = 5_000_000) -> Double {
+nonisolated func burnCPU(iterations: Int = 5_000_000) -> Double {
     var acc = 0.0
     for i in 1...iterations { acc += (Double(i)).squareRoot() }
     return acc

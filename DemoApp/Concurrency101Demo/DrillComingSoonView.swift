@@ -10,13 +10,13 @@ struct DrillComingSoonView: View {
                 VStack(alignment: .leading, spacing: 22) {
                     DrillGlyph(accent: track.accent)
                     Text("Drill")
-                        .font(.system(size: 28, weight: .regular, design: .serif))
+                        .font(.system(size: DemoLayout.typeSize(28), weight: .regular, design: .serif))
                         .foregroundStyle(track.accent)
                     Text(verbatim: track.title)
-                        .font(.system(size: 14, design: .monospaced))
+                        .font(.system(size: DemoLayout.typeSize(14), design: .monospaced))
                         .foregroundStyle(DemoTheme.muted)
                     Text("This room will be a quiz: short questions, then an explanation. It is not in this build. Use Playground to run the lessons and Notes to read the curriculum.")
-                        .font(.system(size: 16, design: .serif))
+                        .font(.system(size: DemoLayout.typeSize(16), design: .serif))
                         .foregroundStyle(Color.white.opacity(0.82))
                         .fixedSize(horizontal: false, vertical: true)
                     VStack(alignment: .leading, spacing: 10) {
@@ -51,11 +51,11 @@ private struct DrillSoonRow: View {
     var body: some View {
         HStack(spacing: 12) {
             Text(verbatim: index)
-                .font(.system(size: 12, design: .monospaced))
+                .font(.system(size: DemoLayout.typeSize(12), design: .monospaced))
                 .foregroundStyle(accent)
                 .frame(width: 28, alignment: .leading)
             Text(verbatim: title)
-                .font(.system(size: 16, design: .serif))
+                .font(.system(size: DemoLayout.typeSize(16), design: .serif))
                 .foregroundStyle(Color.white.opacity(0.86))
         }
         .padding(.vertical, 8)

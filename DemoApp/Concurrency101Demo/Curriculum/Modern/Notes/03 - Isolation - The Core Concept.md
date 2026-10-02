@@ -45,9 +45,11 @@ compile time, and it changes how callers must call you.
 
 ---
 
-## 2. The three domains
+## 2. Three kinds of domain
 
-There are exactly three. Every single declaration in your program is one of them.
+Every declaration belongs to one of three *kinds*. `@MainActor` is not a fourth category —
+it is a **global actor**. A custom `@globalActor` (module 05) is the same kind: one
+process-wide serial domain, just not the main thread.
 
 ```mermaid
 graph TD
@@ -86,7 +88,8 @@ runs on the *caller's* executor, so it very often is main. `nonisolated` describ
 of a guarantee, not the presence of a thread.
 
 **2. Each actor *instance* is its own domain.** Two instances of the same actor type can run
-their methods simultaneously. `@MainActor` is special only because there is exactly one of it.
+their methods simultaneously. A **global** actor (`@MainActor`, or `@DatabaseActor`) is
+special because there is exactly one of it.
 
 **3. `nonisolated` is the safest place to be, not the most dangerous.** Code with no mutable
 state needs no protection. A `nonisolated func parse(_ data: Data) -> Model` is perfectly safe and maximally reusable. The goal is not to isolate everything — it's to isolate exactly the

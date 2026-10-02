@@ -92,7 +92,8 @@ final class NotesSession {
 struct NotesStudioView: View {
     let track: LearningTrack
     @State private var session: NotesSession
-    @Environment(\.horizontalSizeClass) private var sizeClass
+    @Environment(\.usesPhoneChrome) private var usesPhoneChrome
+    @Environment(\.verticalSizeClass) private var verticalSizeClass
 
     init(track: LearningTrack) {
         self.track = track
@@ -100,11 +101,7 @@ struct NotesStudioView: View {
     }
 
     private var overlaySidebar: Bool {
-        #if os(iOS)
-        sizeClass == .compact
-        #else
-        false
-        #endif
+        usesPhoneChrome
     }
 
     var body: some View {
@@ -113,7 +110,11 @@ struct NotesStudioView: View {
             if overlaySidebar {
                 CompactNotesLayout(session: session, accent: track.accent)
             } else {
-                RegularNotesLayout(session: session, accent: track.accent)
+                RegularNotesLayout(
+                    session: session,
+                    accent: track.accent,
+                    sidebarWidth: DemoLayout.sidebarWidth(verticalSizeClass: verticalSizeClass)
+                )
             }
         }
         .navigationTitle(session.selected.map(\.title) ?? "Notes")
@@ -148,15 +149,10 @@ struct NotesStudioView: View {
 private struct RegularNotesLayout: View {
     @Bindable var session: NotesSession
     let accent: Color
+    let sidebarWidth: CGFloat
 
     var body: some View {
         HStack(spacing: 0) {
-            NoteReaderPane(session: session, accent: accent, collapseOnLink: false)
-
-            Rectangle()
-                .fill(accent.opacity(0.22))
-                .frame(width: 1)
-
             NotesSidebar(
                 sections: session.visibleSections,
                 selectedID: session.selectedID,
@@ -164,7 +160,13 @@ private struct RegularNotesLayout: View {
                 accent: accent,
                 onSelect: { session.select($0, collapseSidebar: false) }
             )
-            .frame(width: 292)
+            .frame(width: sidebarWidth)
+
+            Rectangle()
+                .fill(accent.opacity(0.22))
+                .frame(width: 1)
+
+            NoteReaderPane(session: session, accent: accent, collapseOnLink: false)
         }
     }
 }
@@ -239,7 +241,7 @@ private struct NotesSidebar: View {
 
             if sections.isEmpty {
                 Text("No notes match that search.")
-                    .font(.system(size: 14, design: .serif))
+                    .font(.system(size: DemoLayout.typeSize(14), design: .serif))
                     .foregroundStyle(DemoTheme.muted)
                     .padding(16)
                 Spacer()
@@ -273,18 +275,18 @@ private struct NotesSidebarHeader: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Notes")
-                .font(.system(size: 22, design: .serif))
+                .font(.system(size: DemoLayout.typeSize(22), design: .serif))
                 .foregroundStyle(accent)
             HStack(spacing: 8) {
                 Text("Find")
-                    .font(.system(size: 11, design: .monospaced))
+                    .font(.system(size: DemoLayout.typeSize(11), design: .monospaced))
                     .foregroundStyle(DemoTheme.muted)
                 TextField(
                     "Search notes",
                     text: $query,
                     prompt: Text("Search notes").foregroundStyle(DemoTheme.muted)
                 )
-                    .font(.system(size: 14, design: .serif))
+                    .font(.system(size: DemoLayout.typeSize(14), design: .serif))
                     .foregroundStyle(Color.white.opacity(0.9))
                     .textFieldStyle(.plain)
             }
@@ -312,7 +314,7 @@ private struct NotesSidebarSection: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             Text(verbatim: title.uppercased())
-                .font(.system(size: 11, design: .monospaced))
+                .font(.system(size: DemoLayout.typeSize(11), design: .monospaced))
                 .foregroundStyle(DemoTheme.muted)
                 .padding(.horizontal, 8)
 
@@ -341,11 +343,11 @@ private struct NotesSidebarRow: View {
         Button(action: action) {
             HStack(alignment: .firstTextBaseline, spacing: 10) {
                 Text(verbatim: indexLabel)
-                    .font(.system(size: 11, design: .monospaced))
+                    .font(.system(size: DemoLayout.typeSize(11), design: .monospaced))
                     .foregroundStyle(isSelected ? DemoTheme.void : accent)
                     .frame(width: 22, alignment: .leading)
                 Text(verbatim: title)
-                    .font(.system(size: 14, design: .serif))
+                    .font(.system(size: DemoLayout.typeSize(14), design: .serif))
                     .foregroundStyle(isSelected ? DemoTheme.void : Color.white.opacity(0.88))
                     .multilineTextAlignment(.leading)
                     .fixedSize(horizontal: false, vertical: true)
@@ -417,10 +419,10 @@ private struct NoteReaderHeader: View {
     var body: some View {
         HStack(alignment: .firstTextBaseline, spacing: 10) {
             Text(verbatim: indexLabel)
-                .font(.system(size: 12, design: .monospaced))
+                .font(.system(size: DemoLayout.typeSize(12), design: .monospaced))
                 .foregroundStyle(accent)
             Text(verbatim: title)
-                .font(.system(size: 22, design: .serif))
+                .font(.system(size: DemoLayout.typeSize(22), design: .serif))
                 .foregroundStyle(accent)
                 .fixedSize(horizontal: false, vertical: true)
             Spacer(minLength: 0)
@@ -448,7 +450,7 @@ private struct NotePagerBar: View {
                 .foregroundStyle(hasNext ? accent : DemoTheme.muted)
                 .disabled(!hasNext)
         }
-        .font(.system(size: 13, design: .monospaced))
+        .font(.system(size: DemoLayout.typeSize(13), design: .monospaced))
         .buttonStyle(.plain)
     }
 }

@@ -81,7 +81,7 @@ case .timedOut:
 }
 ```
 
-`wait` blocks the calling thread. A timeout stops waiting; it does **not** cancel the grouped operations. Never wait on the main thread for UI-related work.
+`wait` blocks the calling thread. A timeout stops waiting; it does **not** cancel the grouped operations. Never `wait` on the main thread: waiting for work that must hop back to main **deadlocks**; waiting for anything else still **freezes** the UI.
 
 Prefer `notify` or modern `async` composition.
 

@@ -1,4 +1,94 @@
 import SwiftUI
+#if os(iOS)
+import UIKit
+#endif
+
+enum DemoLayout {
+    static var isPadLike: Bool {
+        #if os(iOS)
+        UIDevice.current.userInterfaceIdiom != .phone
+        #else
+        true
+        #endif
+    }
+
+    /// Stacked phone chrome is portrait iPhone only.
+    /// Landscape iPhone, iPad, and Mac get the wide rooms.
+    static func usesPhoneChrome(verticalSizeClass: UserInterfaceSizeClass?) -> Bool {
+        #if os(iOS)
+        UIDevice.current.userInterfaceIdiom == .phone && verticalSizeClass != .compact
+        #else
+        false
+        #endif
+    }
+
+    static func sidebarWidth(verticalSizeClass: UserInterfaceSizeClass?) -> CGFloat {
+        verticalSizeClass == .compact ? 240 : 320
+    }
+
+    /// Two extra points on iPad/Mac so copy is easier to read at tablet distance.
+    static func typeSize(_ phone: CGFloat) -> CGFloat {
+        isPadLike ? phone + 2 : phone
+    }
+}
+
+private enum UsesPhoneChromeKey: EnvironmentKey {
+    static let defaultValue: Bool = {
+        #if os(iOS)
+        UIDevice.current.userInterfaceIdiom == .phone
+        #else
+        false
+        #endif
+    }()
+}
+
+extension EnvironmentValues {
+    var usesPhoneChrome: Bool {
+        get { self[UsesPhoneChromeKey.self] }
+        set { self[UsesPhoneChromeKey.self] = newValue }
+    }
+}
+
+enum DemoSourceType {
+    static let storageKey = "demo.sourceFontSize"
+    static let sizes = [10, 11, 12, 13, 14, 16, 18, 20, 24]
+    static var defaultSize: Int { Int(DemoLayout.typeSize(12)) }
+
+    static func gutterWidth(fontSize: CGFloat, lineCount: Int) -> CGFloat {
+        lineCount >= 100 ? max(28, fontSize + 14) : max(22, fontSize + 10)
+    }
+}
+
+struct WorkbenchOptionsMenu: View {
+    @Binding var showCheatSheet: Bool
+    let accent: Color
+    @AppStorage(DemoSourceType.storageKey) private var size = DemoSourceType.defaultSize
+
+    var body: some View {
+        Menu {
+            Button {
+                showCheatSheet = true
+            } label: {
+                Label("Cheat sheet", systemImage: "text.book.closed")
+            }
+            Menu {
+                Picker("Font size", selection: $size) {
+                    ForEach(DemoSourceType.sizes, id: \.self) { points in
+                        Text(verbatim: "\(points) pt").tag(points)
+                    }
+                }
+            } label: {
+                Label("Font size", systemImage: "textformat.size")
+            }
+        } label: {
+            Image(systemName: "ellipsis.circle")
+                .font(.system(size: 16, weight: .medium))
+                .foregroundStyle(accent)
+                .frame(width: 28, height: 28)
+        }
+        .accessibilityLabel("Playground options")
+    }
+}
 
 enum PathRoom: String, Hashable, Identifiable {
     case playground

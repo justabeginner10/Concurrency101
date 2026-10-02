@@ -68,8 +68,9 @@ missed optimisation in real async code, and it's invisible because the code look
 Rules worth knowing:
 
 - The child **starts at the declaration**, not at the `await`.
-- You must `await` every `async let` on every path — including error paths. If you don't, the
-  scope implicitly cancels and awaits it at exit (so it's safe, but the result is discarded).
+- You do not have to *read* every `async let`. If you never `await` it, the scope cancels and
+  joins it at exit — safe, result discarded. If you care about the value or the error, `await`
+  it on every path that needs it.
 - If one throws, the others are cancelled automatically as the scope unwinds.
 - `async let` is for a **statically known** number of children. Dynamic count → task group.
 

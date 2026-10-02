@@ -125,13 +125,19 @@ Prove the compiler is smarter than "is the type Sendable":
 ```swift
 final class NotSendable { var x = 0 }
 
+actor TransferSink {
+    func consume(_ x: NotSendable) { }   // not `T: Sendable` — region isolation needs that
+}
+
 func transfer() async {
+    let sink = TransferSink()
     let thing = NotSendable()
     thing.x = 42
     await sink.consume(thing)      // ✅ compiles — why?
 }
 
 func transferBad() async {
+    let sink = TransferSink()
     let thing = NotSendable()
     await sink.consume(thing)
     thing.x = 99                   // ❌ now it doesn't — why?

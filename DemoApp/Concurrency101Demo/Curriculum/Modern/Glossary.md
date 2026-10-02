@@ -94,8 +94,9 @@ domain its code and state belong to. Static, not dynamic: it does not propagate 
 calling thread. [[03 - Isolation - The Core Concept]]
 
 ### Isolation domain
-A region of code and state the compiler guarantees is entered by one thing at a time. Exactly
-three kinds: main-actor-isolated, actor-isolated (per *instance*), and nonisolated.
+A region of code and state the compiler guarantees is entered by one thing at a time. Three
+kinds: global-actor-isolated (`@MainActor` or a custom `@globalActor`), actor-isolated (per
+*instance*), and nonisolated.
 
 ### `Mutex`
 From the `Synchronization` module. A lock for **synchronous** critical sections — no `await`

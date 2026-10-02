@@ -191,7 +191,9 @@ When you have no strong reason to do otherwise, these are right far more often t
 Have a reason before departing from them.
 
 - **View models, observable objects, anything UI touches** → `@MainActor`.
-- **Networking and decoding** → `nonisolated async`, returning `Sendable` value types.
+- **Networking** → `nonisolated async`, returning `Sendable` value types. `URLSession` already
+  suspends. **CPU decoding / thumbnails / hashing** → `@concurrent nonisolated` — under 6.2
+  defaults, `nonisolated async` stays on the caller (often main).
 - **Shared mutable caches/stores** → `actor`.
 - **Model types crossing boundaries** → `struct`, all `Sendable`.
 - **Entering async from a UI callback** → `.task { }` in SwiftUI (auto-cancels), `Task { }`

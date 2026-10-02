@@ -8,8 +8,8 @@ struct NoteArticleView: View {
 
     var body: some View {
         Markdown(markdown)
-            .font(.system(size: 16, design: .serif))
-            .markdownTheme(.concurrency101(accent: accent))
+            .font(.system(size: DemoLayout.typeSize(16), design: .serif))
+            .markdownTheme(.concurrency101(accent: accent, bodySize: DemoLayout.typeSize(16)))
             .markdownTextStyle(\.code) {
                 FontFamilyVariant(.monospaced)
                 FontSize(.em(0.88))
@@ -29,11 +29,11 @@ struct NoteArticleView: View {
 }
 
 private extension Theme {
-    static func concurrency101(accent: Color) -> Theme {
+    static func concurrency101(accent: Color, bodySize: CGFloat) -> Theme {
         Theme()
             .text {
                 ForegroundColor(Color.white.opacity(0.86))
-                FontSize(16)
+                FontSize(bodySize)
             }
             .strong {
                 FontWeight(.semibold)
@@ -161,7 +161,7 @@ private struct NoteCodeBlock<Label: View>: View {
             VStack(alignment: .leading, spacing: 0) {
                 if let language, !language.isEmpty {
                     Text(verbatim: language)
-                        .font(.system(size: 11, design: .monospaced))
+                        .font(.system(size: DemoLayout.typeSize(11), design: .monospaced))
                         .foregroundStyle(accent.opacity(0.9))
                         .padding(.horizontal, 12)
                         .padding(.vertical, 8)
@@ -196,10 +196,10 @@ private struct MermaidFigure: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             Text("Diagram")
-                .font(.system(size: 11, design: .monospaced))
+                .font(.system(size: DemoLayout.typeSize(11), design: .monospaced))
                 .foregroundStyle(accent)
             Text(verbatim: source)
-                .font(.system(size: 12, design: .monospaced))
+                .font(.system(size: DemoLayout.typeSize(12), design: .monospaced))
                 .foregroundStyle(Color.white.opacity(0.8))
                 .textSelection(.enabled)
                 .frame(maxWidth: .infinity, alignment: .leading)

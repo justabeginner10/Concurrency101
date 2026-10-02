@@ -179,7 +179,7 @@ Rules:
 
 ## `Task.detached` is not a generic replacement for global queues
 
-Detached tasks do not inherit actor context or ordinary task-local structure in the same way as child/unstructured tasks. Use them only when work is intentionally independent. Most application code should prefer a normal `Task`, `async let`, or task group.
+`Task { }` inherits the caller’s actor isolation. Child tasks (`async let`, task groups) do **not** inherit actor isolation; they inherit priority and task-locals. `Task.detached` inherits neither — it is not a generic `DispatchQueue.global().async`. Use detached only when work is intentionally independent of actor context *and* task-locals. Most application code should prefer a normal `Task`, `async let`, a task group, or `@concurrent nonisolated`.
 
 Similarly, do not wrap every synchronous function in `Task.detached` to make it “background.” Decide whether the work is CPU-bound, blocking, actor-isolated, cancellable, and safe to send.
 

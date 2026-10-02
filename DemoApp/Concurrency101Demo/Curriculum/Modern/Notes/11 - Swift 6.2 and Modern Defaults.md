@@ -104,19 +104,28 @@ To set it for a package:
 
 ## 5. The four-way behaviour table
 
-Called from a `@MainActor` context. This is the table worth committing to memory:
+Called from a `@MainActor` context, with **Approachable Concurrency still on** (the lab
+default). Default Isolation and Approachable Concurrency are **two different switches**.
+Changing only Default Isolation does *not* restore the old “hop to the pool” behaviour.
 
-| Declaration | Xcode 26 defaults | `Default Isolation = nonisolated` |
+| Declaration | Xcode 26 defaults (MainActor + Approachable) | `Default Isolation = nonisolated` (Approachable still on) |
 | :--- | :--- | :--- |
-| `func f() async` | 🟢 main | ⚪️ background |
-| `nonisolated func f() async` | 🟢 main (caller's executor) | ⚪️ background |
+| `func f() async` | 🟢 main (implicit `@MainActor`) | 🟢 main (caller’s executor — `nonisolated(nonsending)`) |
+| `nonisolated func f() async` | 🟢 main (caller’s executor) | 🟢 main (caller’s executor) |
 | `@concurrent nonisolated func f() async` | ⚪️ background | ⚪️ background |
 | `func f() async` via `Task.detached` | 🟢 **main** | ⚪️ background |
 
-That last row is the one that proves the principle from
+Row 4 with MainActor default is the one that proves the principle from
 [[03 - Isolation - The Core Concept]]: `Task.detached` inherits nothing, and the function
 *still* runs on main — because `@MainActor` was baked into the declaration by the module
 default, not passed down by the caller. **Isolation is static.**
+
+Row 4 with Default Isolation = `nonisolated` is background because `plain()` is now
+nonisolated-nonsending and the detached task’s executor is the concurrent pool.
+
+The ⚪️ background column for unannotated / `nonisolated async` is the **old** Swift 6.0 hop
+(Approachable **off**). Do not use that column to predict a 6.2 app that only flipped Default
+Isolation.
 
 ---
 

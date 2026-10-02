@@ -3,7 +3,8 @@ import SwiftUI
 struct TrackHubView: View {
     let track: LearningTrack
     @State private var room: PathRoom?
-    @Environment(\.horizontalSizeClass) private var sizeClass
+    @Environment(\.usesPhoneChrome) private var usesPhoneChrome
+    @Environment(\.verticalSizeClass) private var verticalSizeClass
 
     private var noteCount: Int {
         CurriculumCatalog.notes(for: track).count
@@ -15,7 +16,12 @@ struct TrackHubView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 28) {
                     TrackHubHeader(trackTitle: track.title, accent: track.accent)
-                    PathRoomStack(track: track, sizeClass: sizeClass, noteCount: noteCount) { selected in
+                    PathRoomStack(
+                        track: track,
+                        usesPhoneChrome: usesPhoneChrome,
+                        compactVertical: verticalSizeClass == .compact,
+                        noteCount: noteCount
+                    ) { selected in
                         room = selected
                     }
                 }
@@ -47,23 +53,24 @@ struct TrackHubView: View {
 
 private struct PathRoomStack: View {
     let track: LearningTrack
-    let sizeClass: UserInterfaceSizeClass?
+    let usesPhoneChrome: Bool
+    let compactVertical: Bool
     let noteCount: Int
     let onSelect: (PathRoom) -> Void
 
     var body: some View {
         let cards = Group {
-            PathRoomCard(room: .playground, track: track, noteCount: noteCount) {
+            PathRoomCard(room: .playground, track: track, noteCount: noteCount, compactVertical: compactVertical) {
                 onSelect(.playground)
             }
-            PathRoomCard(room: .notes, track: track, noteCount: noteCount) {
+            PathRoomCard(room: .notes, track: track, noteCount: noteCount, compactVertical: compactVertical) {
                 onSelect(.notes)
             }
-            PathRoomCard(room: .drill, track: track, noteCount: noteCount) {
+            PathRoomCard(room: .drill, track: track, noteCount: noteCount, compactVertical: compactVertical) {
                 onSelect(.drill)
             }
         }
-        if sizeClass == .compact {
+        if usesPhoneChrome {
             VStack(spacing: 16) { cards }
         } else {
             HStack(alignment: .top, spacing: 16) { cards }
@@ -78,10 +85,10 @@ private struct TrackHubHeader: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             Text(verbatim: trackTitle)
-                .font(.system(size: 28, weight: .regular, design: .serif))
+                .font(.system(size: DemoLayout.typeSize(28), weight: .regular, design: .serif))
                 .foregroundStyle(accent)
             Text("Three rooms. Playground runs the lessons. Notes is the curriculum. Drill will be the quiz — not in this build.")
-                .font(.system(size: 16, design: .serif))
+                .font(.system(size: DemoLayout.typeSize(16), design: .serif))
                 .foregroundStyle(Color.white.opacity(0.78))
                 .fixedSize(horizontal: false, vertical: true)
         }
@@ -92,6 +99,7 @@ private struct PathRoomCard: View {
     let room: PathRoom
     let track: LearningTrack
     let noteCount: Int
+    var compactVertical: Bool = false
     let action: () -> Void
 
     var body: some View {
@@ -99,23 +107,24 @@ private struct PathRoomCard: View {
             VStack(alignment: .leading, spacing: 16) {
                 PathRoomGlyph(room: room, track: track)
                 Text(verbatim: room.title)
-                    .font(.system(size: 22, design: .serif))
+                    .font(.system(size: DemoLayout.typeSize(22), design: .serif))
                     .foregroundStyle(track.accent)
                     .multilineTextAlignment(.leading)
                 Text(verbatim: room.blurb(noteCount: noteCount))
-                    .font(.system(size: 14, design: .serif))
+                    .font(.system(size: DemoLayout.typeSize(14), design: .serif))
                     .foregroundStyle(Color.white.opacity(0.72))
-                    .fixedSize(horizontal: false, vertical: true)
+                    .lineLimit(compactVertical ? 3 : nil)
+                    .fixedSize(horizontal: false, vertical: !compactVertical)
                     .multilineTextAlignment(.leading)
                 Text(verbatim: room.cta)
-                    .font(.system(size: 13, design: .monospaced))
+                    .font(.system(size: DemoLayout.typeSize(13), design: .monospaced))
                     .foregroundStyle(DemoTheme.void)
                     .padding(.horizontal, 12)
                     .padding(.vertical, 8)
                     .background(track.accent.opacity(room == .drill ? 0.55 : 1))
                     .clipShape(RoundedRectangle(cornerRadius: 3, style: .continuous))
             }
-            .frame(maxWidth: .infinity, minHeight: 240, alignment: .topLeading)
+            .frame(maxWidth: .infinity, minHeight: compactVertical ? 160 : 240, alignment: .topLeading)
             .padding(20)
             .background(Color.white.opacity(0.04))
             .overlay(

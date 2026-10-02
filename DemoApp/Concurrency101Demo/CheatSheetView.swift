@@ -80,7 +80,7 @@ struct CheatSheetView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 20) {
                     Text("Concurrency101 is a dictionary. The intent name is what you call while learning; the Apple name is what you will see in docs and interviews.")
-                        .font(.system(size: 15, design: .serif))
+                        .font(.system(size: DemoLayout.typeSize(15), design: .serif))
                         .foregroundStyle(Color.white.opacity(0.82))
 
                     CheatSheetMappingList(rows: mappings)
@@ -118,14 +118,14 @@ private struct CheatSheetMappingList: View {
                 }
                 VStack(alignment: .leading, spacing: 6) {
                     Text(row.intent)
-                        .font(.system(size: 13, design: .serif))
+                        .font(.system(size: DemoLayout.typeSize(13), design: .serif))
                         .foregroundStyle(DemoTheme.muted)
                     Text(row.teaching)
-                        .font(.system(size: 13, design: .monospaced))
+                        .font(.system(size: DemoLayout.typeSize(13), design: .monospaced))
                         .foregroundStyle(DemoTheme.phosphor)
                         .textSelection(.enabled)
                     Text(row.apple)
-                        .font(.system(size: 13, design: .monospaced))
+                        .font(.system(size: DemoLayout.typeSize(13), design: .monospaced))
                         .foregroundStyle(DemoTheme.cyan)
                         .textSelection(.enabled)
                 }
@@ -142,18 +142,18 @@ private struct CheatSheetTrapList: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             Text("Everyday traps")
-                .font(.system(size: 18, design: .serif))
+                .font(.system(size: DemoLayout.typeSize(18), design: .serif))
                 .foregroundStyle(DemoTheme.phosphor)
             ForEach(Array(traps.enumerated()), id: \.offset) { _, trap in
                 VStack(alignment: .leading, spacing: 4) {
                     Text(trap.said)
-                        .font(.system(size: 14, design: .serif))
+                        .font(.system(size: DemoLayout.typeSize(14), design: .serif))
                         .foregroundStyle(Color.white.opacity(0.86))
                     Text("typed  \(trap.typed)")
-                        .font(.system(size: 12, design: .monospaced))
+                        .font(.system(size: DemoLayout.typeSize(12), design: .monospaced))
                         .foregroundStyle(DemoTheme.freeze.opacity(0.9))
                     Text("meant  \(trap.meant)")
-                        .font(.system(size: 12, design: .monospaced))
+                        .font(.system(size: DemoLayout.typeSize(12), design: .monospaced))
                         .foregroundStyle(DemoTheme.cyan)
                 }
                 .padding(.bottom, 8)
