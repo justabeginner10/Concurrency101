@@ -1,6 +1,6 @@
 # Module 09 — Tasks, Cancellation and Priority
 
-> Roadmap: [[00 - Roadmap]] · Terms: [[Glossary]] · Prev: [[08 - Structured Concurrency]] ·
+> Terms: [[Glossary]] · Prev: [[08 - Structured Concurrency]] ·
 > Next: [[10 - AsyncSequence and AsyncStream]]
 > **Goal:** cancel correctly, and stop using `Task { }` where it doesn't belong.
 > Drill: [[Drill 09 - Cancel It Properly]]
@@ -29,10 +29,16 @@ The inheritance subtlety worth repeating from [[03 - Isolation - The Core Concep
 ```swift
 @MainActor
 func tap() {
-    Task {  here("A") }           // MAIN — inherited @MainActor from lexical context
-    Task.detached { here("B") }   // bg   — inherited nothing
+    Task { print(Thread.isMainThread) }            // true — Task inherits @MainActor
+    Task.detached {
+        print(Thread.isMainThread)                 // typically false — detached inherits nothing
+    }
 }
 ```
+
+`Task.detached` inherits no *context*. If the function you call from inside it is itself
+`@MainActor` (including by module default), that call still runs on main — isolation is
+static. The prints above assume the closures contain only nonisolated work.
 
 "Inherits cancellation state at creation" is also a trap: a `Task { }` created inside a
 cancelled task starts cancelled, but a `Task { }` created *before* cancellation is **not**

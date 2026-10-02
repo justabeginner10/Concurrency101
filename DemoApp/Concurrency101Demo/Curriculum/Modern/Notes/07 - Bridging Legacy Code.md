@@ -1,6 +1,6 @@
 # Module 07 — Bridging Legacy Code
 
-> Roadmap: [[00 - Roadmap]] · Terms: [[Glossary]] · Prev: [[06 - Sendable and Data-Race Safety]] ·
+> Terms: [[Glossary]] · Prev: [[06 - Sendable and Data-Race Safety]] ·
 > Next: [[08 - Structured Concurrency]]
 > **Goal:** wrap any callback, delegate or GCD API in async without leaking or hanging.
 > Drill: [[Drill 07 - Wrap a Delegate]]
@@ -53,9 +53,12 @@ Four variants:
 | Resume **zero** times | The task suspends **forever**. A silent hang, no crash, no log |
 | Resume **twice** | Crash (checked) or memory corruption (unsafe) |
 
-Checked continuations detect both and tell you — "SWIFT TASK CONTINUATION MISUSE" — which is
-why you always start with checked. Switch to unsafe only if you've profiled and proven the
-overhead matters, which for a network call it never will.
+Checked continuations detect a **double resume** immediately (crash in debug with
+"SWIFT TASK CONTINUATION MISUSE"). A **zero resume** is reported when the continuation is
+*released* without being resumed — if you leak the continuation object, you hang with no
+log. That's why you always start with checked, and why you still have to trace every path.
+Switch to unsafe only if you've profiled and proven the overhead matters, which for a
+network call it never will.
 
 The dangerous shape is a callback with multiple paths:
 
@@ -199,7 +202,7 @@ has async variants you don't need to build.
 | Legacy | Modern |
 | :--- | :--- |
 | `DispatchQueue.main.async { }` | `Task { @MainActor in }` |
-| `DispatchQueue.global().async { }` | `Task.detached { }` or `@concurrent` func |
+| `DispatchQueue.global().async { }` | `@concurrent nonisolated` for CPU work; not `Task.detached` |
 | Serial queue guarding state | `actor` |
 | `DispatchGroup` | `withTaskGroup` |
 | `DispatchQueue.concurrentPerform` | `withTaskGroup` |

@@ -1,6 +1,6 @@
 # Module 08 — Structured Concurrency
 
-> Roadmap: [[00 - Roadmap]] · Terms: [[Glossary]] · Prev: [[07 - Bridging Legacy Code]] ·
+> Terms: [[Glossary]] · Prev: [[07 - Bridging Legacy Code]] ·
 > Next: [[09 - Tasks, Cancellation and Priority]]
 > **Goal:** run work in parallel without losing track of errors or cancellation.
 > Drill: [[Drill 08 - Parallel Fetch]]

@@ -1,6 +1,6 @@
 # Module 06 — Sendable and Data-Race Safety
 
-> Roadmap: [[00 - Roadmap]] · Terms: [[Glossary]] · Prev: [[05 - MainActor and Global Actors]] ·
+> Terms: [[Glossary]] · Prev: [[05 - MainActor and Global Actors]] ·
 > Next: [[07 - Bridging Legacy Code]]
 > **Goal:** read any `Sendable` error and know the fix immediately.
 > Drill: [[Drill 06 - Making It Sendable]]

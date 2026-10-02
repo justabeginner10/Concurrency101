@@ -1,6 +1,6 @@
 # Module 02 — async / await in Depth
 
-> Index: [[00 - Roadmap]] · Terms: [[Glossary]] · Prev: [[01 - Mental Model]]
+> Terms: [[Glossary]] · Prev: [[01 - Mental Model]]
 > **Goal:** know exactly what is guaranteed and what is *not* guaranteed across an `await`,
 > and be able to spot a reentrancy bug by reading.
 
@@ -374,7 +374,8 @@ func load() {                    // still synchronous to the caller
 
 The caller gets no signal about when this finishes, can't cancel it, and can't handle its
 errors. This is a *fire-and-forget*, and it should be a conscious choice. Prefer making
-`load()` itself `async`. Module 04 covers when unstructured tasks are genuinely right.
+`load()` itself `async`. [[09 - Tasks, Cancellation and Priority]] covers when unstructured
+tasks are genuinely right.
 
 **7.4 — Assuming `await` yields.** If the awaited value is already available, no suspension
 happens. A "cooperative yield" for a long CPU loop needs an explicit `await Task.yield()`.
@@ -449,7 +450,7 @@ Before the quiz, make sure you can answer these out loud:
 
 ## 10. Gate
 
-> ⚠️ This module predates the drill format. No quiz — see [[Drills - How They Work]].
+> ⚠️ This module predates the drill format.
 
 Work through §9 out loud, then go to [[03 - Isolation - The Core Concept]].
 

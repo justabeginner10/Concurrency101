@@ -1,6 +1,6 @@
 # Module 10 — AsyncSequence and AsyncStream
 
-> Roadmap: [[00 - Roadmap]] · Terms: [[Glossary]] · Prev: [[09 - Tasks, Cancellation and Priority]] ·
+> Terms: [[Glossary]] · Prev: [[09 - Tasks, Cancellation and Priority]] ·
 > Next: [[11 - Swift 6.2 and Modern Defaults]]
 > **Goal:** model values arriving over time without reaching for Combine.
 > Drill: [[Drill 10 - Build a Stream]]
@@ -23,7 +23,7 @@ for await note in NotificationCenter.default.notifications(named: .x) { }
 for try await line in url.lines { }
 for try await byte in url.resourceBytes { }
 for await value in combinePublisher.values { }
-for await update in observationTracking { }
+for await value in Observations({ model.property }) { }   // Swift 6.2; @Observable changes
 ```
 
 The loop is cancellation-aware: cancelling the task ends the iteration. And `break` terminates
@@ -47,7 +47,9 @@ continuation.finish()
 for await n in stream { print(n) }
 ```
 
-The closure form, for when the source's lifetime matches the stream's:
+The closure form, for when the source's lifetime matches the stream's. `Timer` needs a run
+loop; this example is for a main-actor / main-run-loop context — it will not fire from an
+arbitrary pool thread:
 
 ```swift
 var ticks: AsyncStream<Date> {

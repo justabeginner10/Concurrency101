@@ -1,6 +1,6 @@
 # Module 11 — Swift 6.2 and Modern Defaults
 
-> Roadmap: [[00 - Roadmap]] · Terms: [[Glossary]] · Prev: [[10 - AsyncSequence and AsyncStream]] ·
+> Terms: [[Glossary]] · Prev: [[10 - AsyncSequence and AsyncStream]] ·
 > Next: [[12 - Migrating to Swift 6]]
 > **Goal:** understand why the same code behaves differently in two of your targets.
 > Drill: [[Drill 11 - Same Code, Four Behaviours]]

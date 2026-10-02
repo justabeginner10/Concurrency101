@@ -1,6 +1,6 @@
 # Resources
 
-> Roadmap: [[00 - Roadmap]] · Curated, not exhaustive. Ordered by how useful they actually are.
+> Terms: [[Glossary]] · Curated, not exhaustive. Ordered by how useful they actually are.
 
 > ⚠️ **Check the date on everything.** Swift concurrency changed substantially in 6.0 (strict
 > checking, region isolation) and again in 6.2 (approachable concurrency, default isolation).
@@ -46,7 +46,7 @@ design decision that otherwise looks arbitrary.
 | Protect mutable state with actors | 21 | **The reentrancy explanation is the best one filmed** |
 | Explore structured concurrency | 21 | Task trees, cancellation |
 | Eliminate data races using Swift Concurrency | 22 | The isolation mental model |
-| Visualize and optimize Swift concurrency | 22 | Instruments — pair with [[Lab Setup]] §5 |
+| Visualize and optimize Swift concurrency | 22 | Instruments — Task Forest, task leaks |
 | Beyond the basics of structured concurrency | 23 | Task-locals, cancellation depth |
 | Migrate your app to Swift 6 | 24 | Practical migration |
 | Embracing Swift concurrency | 25 | The 6.2 defaults and the reasoning |

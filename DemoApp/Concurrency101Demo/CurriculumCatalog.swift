@@ -82,20 +82,10 @@ enum CurriculumCatalog {
 
     private static let modern: [CurriculumSection] = [
         CurriculumSection(
-            id: "start",
-            title: "Start here",
-            notes: [
-                modernNote("modern-overview", file: "README", folder: "Curriculum/Modern", index: "—", title: "Overview"),
-                modernNote("modern-roadmap", file: "00 - Roadmap", folder: "Curriculum/Modern", index: "—", title: "Roadmap"),
-                modernNote("modern-decision", file: "00 - Decision Procedure", folder: "Curriculum/Modern", index: "—", title: "Decision Procedure"),
-                modernNote("modern-lab", file: "Lab Setup", folder: "Curriculum/Modern/Lab", index: "—", title: "Lab Setup"),
-                modernNote("modern-progress", file: "Progress", folder: "Curriculum/Modern", index: "—", title: "Progress"),
-            ]
-        ),
-        CurriculumSection(
             id: "modules",
             title: "Modules",
             notes: [
+                modernNote("modern-decision", file: "00 - Decision Procedure", folder: "Curriculum/Modern", index: "—", title: "Decision Procedure"),
                 modernNote("modern-01", file: "01 - Mental Model", folder: "Curriculum/Modern/Notes", index: "01", title: "Mental Model"),
                 modernNote("modern-02", file: "02 - Async Await Deep Dive", folder: "Curriculum/Modern/Notes", index: "02", title: "async / await"),
                 modernNote("modern-03", file: "03 - Isolation - The Core Concept", folder: "Curriculum/Modern/Notes", index: "03", title: "Isolation"),
@@ -117,25 +107,6 @@ enum CurriculumCatalog {
             notes: [
                 modernNote("modern-glossary", file: "Glossary", folder: "Curriculum/Modern", index: "—", title: "Glossary"),
                 modernNote("modern-resources", file: "Resources", folder: "Curriculum/Modern", index: "—", title: "Resources"),
-            ]
-        ),
-        CurriculumSection(
-            id: "drills",
-            title: "Written drills",
-            notes: [
-                modernNote("modern-drills-how", file: "Drills - How They Work", folder: "Curriculum/Modern/Drills", index: "—", title: "How Drills Work"),
-                modernNote("modern-drill-03", file: "Drill 03 - Reading Isolation", folder: "Curriculum/Modern/Drills", index: "03", title: "Reading Isolation"),
-                modernNote("modern-drill-04", file: "Drill 04 - The Reentrancy Bug", folder: "Curriculum/Modern/Drills", index: "04", title: "The Reentrancy Bug"),
-                modernNote("modern-drill-05", file: "Drill 05 - MainActor Propagation", folder: "Curriculum/Modern/Drills", index: "05", title: "MainActor Propagation"),
-                modernNote("modern-drill-06", file: "Drill 06 - Making It Sendable", folder: "Curriculum/Modern/Drills", index: "06", title: "Making It Sendable"),
-                modernNote("modern-drill-07", file: "Drill 07 - Wrap a Delegate", folder: "Curriculum/Modern/Drills", index: "07", title: "Wrap a Delegate"),
-                modernNote("modern-drill-08", file: "Drill 08 - Parallel Fetch", folder: "Curriculum/Modern/Drills", index: "08", title: "Parallel Fetch"),
-                modernNote("modern-drill-09", file: "Drill 09 - Cancel It Properly", folder: "Curriculum/Modern/Drills", index: "09", title: "Cancel It Properly"),
-                modernNote("modern-drill-10", file: "Drill 10 - Build a Stream", folder: "Curriculum/Modern/Drills", index: "10", title: "Build a Stream"),
-                modernNote("modern-drill-11", file: "Drill 11 - Same Code, Four Behaviours", folder: "Curriculum/Modern/Drills", index: "11", title: "Four Behaviours"),
-                modernNote("modern-drill-12", file: "Drill 12 - Migrate One Module", folder: "Curriculum/Modern/Drills", index: "12", title: "Migrate One Module"),
-                modernNote("modern-drill-13", file: "Drill 13 - Test the Untestable", folder: "Curriculum/Modern/Drills", index: "13", title: "Test the Untestable"),
-                modernNote("modern-capstone", file: "Capstone", folder: "Curriculum/Modern/Drills", index: "—", title: "Capstone"),
             ]
         ),
     ]

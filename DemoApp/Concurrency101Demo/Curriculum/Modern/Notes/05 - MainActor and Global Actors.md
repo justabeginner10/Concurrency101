@@ -1,6 +1,6 @@
 # Module 05 — @MainActor and Global Actors
 
-> Roadmap: [[00 - Roadmap]] · Terms: [[Glossary]] · Prev: [[04 - Actors]] ·
+> Terms: [[Glossary]] · Prev: [[04 - Actors]] ·
 > Next: [[06 - Sendable and Data-Race Safety]]
 > **Goal:** know exactly how `@MainActor` spreads through a codebase, and stop fighting it.
 > Drill: [[Drill 05 - MainActor Propagation]]
@@ -46,7 +46,7 @@ The global-variable case is worth calling out, because it's the one Swift 6 brea
 ```swift
 var sharedFormatter = DateFormatter()          // ❌ Swift 6: global mutable state
 @MainActor var sharedFormatter = DateFormatter()   // ✅ isolated
-let sharedFormatter = ISO8601DateFormatter()       // ✅ if the type is Sendable
+let maxAge: TimeInterval = 60                      // ✅ Sendable value type
 ```
 
 ---
@@ -72,7 +72,7 @@ The four vectors, in the order you'll actually encounter them:
 your type is isolated — no annotation appears in your source. This is why most app code is
 already on the main actor.
 
-**Superclass.** Subclasses inherit, and you cannot widen isolation in an override.
+**Superclass.** An override cannot drop the isolation of the method it overrides.
 
 **Module default.** `SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor` (Xcode 26 default) makes every
 unannotated declaration main-isolated. Your app target likely has it; your packages likely
@@ -225,16 +225,18 @@ background threads" runtime warning.
 @MainActor @Observable final class ProfileModel {
     var profile: Profile?
     func load() async {
-        let fetched = try? await api.fetch()   // hops away and back
-        profile = fetched                      // back on main — safe
+        let fetched = try? await api.fetch()   // suspends; does not by itself leave MainActor
+        profile = fetched                      // still on main — safe
     }
 }
 ```
 
-Note what this function does: it's main-actor-isolated *throughout*, and the `await` in the
-middle releases the main thread while the network call is outstanding. **Being on the main
-actor does not mean blocking the main thread.** This is the point people miss when they
-prematurely push view-model code off main.
+Note what this function does: it's main-actor-isolated *throughout*. If `api.fetch()` is
+ordinary `nonisolated async` under 6.2 approachable-concurrency defaults, the `await`
+**suspends on the main actor** — it frees the main thread during the network wait, but it
+does not hop to the cooperative pool. **Being on the main actor does not mean blocking the
+main thread.** That is the point people miss when they prematurely push view-model code off
+main. Use `@concurrent` only when the work is CPU-bound and must actually leave.
 
 ---
 

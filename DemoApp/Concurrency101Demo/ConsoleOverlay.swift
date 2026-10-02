@@ -104,8 +104,8 @@ enum DemoTheme {
     static let syntaxPlain = Color.white.opacity(0.86)
 }
 
-/// One logical line with a numbered gutter. Soft-wraps hang under the text,
-/// so a wrap is not mistaken for a new line.
+/// One logical line with a numbered gutter. Soft-wraps hang at the source
+/// indent, matching Xcode, so a wrap is not mistaken for a new line.
 struct GutteredLine: View {
     let number: Int
     let gutterWidth: CGFloat
@@ -114,6 +114,7 @@ struct GutteredLine: View {
     var ruleColor: Color = DemoTheme.phosphor
 
     var body: some View {
+        let hang = wrapIndent
         HStack(alignment: .firstTextBaseline, spacing: 8) {
             Text(verbatim: "\(number)")
                 .font(.system(size: fontSize, design: .monospaced))
@@ -125,13 +126,34 @@ struct GutteredLine: View {
                 .font(.system(size: fontSize, design: .monospaced))
                 .foregroundStyle(ruleColor.opacity(0.4))
 
-            Text(attributedText)
+            Text(textAfterIndent)
                 .font(.system(size: fontSize, design: .monospaced))
                 .lineSpacing(3)
                 .textSelection(.enabled)
+                .padding(.leading, hang)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .fixedSize(horizontal: false, vertical: true)
         }
+    }
+
+    private var wrapIndent: CGFloat {
+        let columns = DemoSourceType.leadingIndentColumns(String(attributedText.characters))
+        guard columns > 0 else { return 0 }
+        return CGFloat(columns) * DemoSourceType.monoAdvance(fontSize: fontSize)
+    }
+
+    /// Leading whitespace is drawn as padding so wrapped continuations stay
+    /// at that indent. The spaces themselves are not in the wrapped `Text`.
+    private var textAfterIndent: AttributedString {
+        let raw = String(attributedText.characters)
+        let whitespace = raw.prefix { $0 == " " || $0 == "\t" }.count
+        guard whitespace > 0 else { return attributedText }
+        var index = attributedText.startIndex
+        for _ in 0..<whitespace {
+            index = attributedText.index(afterCharacter: index)
+        }
+        let trimmed = AttributedString(attributedText[index...])
+        return trimmed.characters.isEmpty ? AttributedString(" ") : trimmed
     }
 }
 

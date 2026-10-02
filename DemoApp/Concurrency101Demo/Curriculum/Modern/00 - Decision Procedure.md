@@ -1,7 +1,7 @@
 # The Decision Procedure
 
 > **This is the note you open while coding, not while studying.**
-> Roadmap: [[00 - Roadmap]] · Terms: [[Glossary]] · Progress: [[Progress]]
+> Terms: [[Glossary]]
 
 You are mid-implementation. Something won't compile, or it compiles but you don't know what
 it's doing. Don't reach for a tutorial. Work the procedure.

@@ -1,7 +1,6 @@
 # Module 13 — Testing Concurrent Code
 
-> Roadmap: [[00 - Roadmap]] · Terms: [[Glossary]] · Prev: [[12 - Migrating to Swift 6]] ·
-> Next: [[Capstone]]
+> Terms: [[Glossary]] · Prev: [[12 - Migrating to Swift 6]]
 > **Goal:** async tests that fail for real reasons and never flake.
 > Drill: [[Drill 13 - Test the Untestable]]
 

@@ -1,6 +1,6 @@
 # Module 12 — Migrating to Swift 6
 
-> Roadmap: [[00 - Roadmap]] · Terms: [[Glossary]] · Prev: [[11 - Swift 6.2 and Modern Defaults]] ·
+> Terms: [[Glossary]] · Prev: [[11 - Swift 6.2 and Modern Defaults]] ·
 > Next: [[13 - Testing Concurrent Code]]
 > **Goal:** take a real module to Swift 6 language mode without a rewrite and without
 > `@unchecked Sendable`. Drill: [[Drill 12 - Migrate One Module]]

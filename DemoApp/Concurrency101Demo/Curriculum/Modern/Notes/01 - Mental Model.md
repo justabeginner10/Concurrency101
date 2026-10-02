@@ -1,6 +1,6 @@
 # Module 01 — The Mental Model
 
-> Index: [[00 - Roadmap]] · Terms: [[Glossary]] · Next: [[02 - Async Await Deep Dive]]
+> Terms: [[Glossary]] · Next: [[02 - Async Await Deep Dive]]
 > **Goal:** stop thinking in threads. By the end you should be able to say precisely what
 > runs your code, what "suspend" means, and why `await` is not `wait`.
 
@@ -125,8 +125,9 @@ number of cores. Any thread beyond that is pure overhead: memory for its stack, 
 switches. GCD's growable pool was solving the wrong problem — it grew because threads were
 *blocked*, and the real fix is to never block.
 
-The pool is called **cooperative** because tasks are never forcibly preempted. A task runs
-until it voluntarily gives up its thread by **suspending**. That's a bargain, and your side
+The pool is called **cooperative** because the Swift runtime does not preempt a running
+job: a task runs until it voluntarily gives up its thread by **suspending**. (The OS can
+still preempt the *thread*; that is not the same thing.) That's a bargain, and your side
 of it is:
 
 > **The runtime contract:** never block a cooperative pool thread.
@@ -383,11 +384,12 @@ make the caller `async`, or use `Task { }` and handle the result asynchronously
 
 **7.3 — Assuming `Thread.current` or thread-local storage still works.** Tasks migrate
 between threads at every suspension point. Any logging, analytics, or DI that keys off the
-current thread is broken in async code. Use **task-local values** instead (module 04).
+current thread is broken in async code. Use **task-local values** instead
+([[09 - Tasks, Cancellation and Priority]]).
 
 **7.4 — Expecting `await` to hop you back to the main thread.** It doesn't, by itself. Where
-your code runs is determined by **isolation**, not by `await` — that's modules 07 and 08.
-For now: if you touch UI, you need `@MainActor`.
+your code runs is determined by **isolation**, not by `await` — that's
+[[03 - Isolation - The Core Concept]]. For now: if you touch UI, you need `@MainActor`.
 
 **7.5 — Thinking "async" implies "background".** It doesn't. An `async` function called from
 `@MainActor` code may run entirely on the main actor. `async` describes *the ability to
@@ -397,7 +399,7 @@ suspend*, not *where the work happens*.
 
 ## 8. Exercises
 
-Do these in a playground or a scratch app target before taking the quiz. Reading isn't enough
+Do these in a playground or a scratch app target. Reading isn't enough
 — the mental model only sticks once you've watched it behave.
 
 **8.1 — Watch a task change threads.**
@@ -442,12 +444,8 @@ func refresh() async throws -> [Item] {
 
 ## 9. Gate
 
-> ⚠️ This module predates the drill format. There is no quiz any more — see
-> [[Drills - How They Work]] for why.
+> ⚠️ This module predates the drill format.
 
-Do the exercises in §8 in the lab ([[Lab Setup]]), then move to
-[[03 - Isolation - The Core Concept]]. §4.1 and §4.2 of this module are the bridge into it:
-if "isolation propagates, threads do not" doesn't feel obvious yet, module 03 is where it
-becomes so.
-
-Log anything you predicted wrong in the Error Log in [[Progress]].
+Do the exercises in §8, then move to [[03 - Isolation - The Core Concept]]. §4.1 and §4.2 of
+this module are the bridge into it: if "isolation propagates, threads do not" doesn't feel
+obvious yet, module 03 is where it becomes so.

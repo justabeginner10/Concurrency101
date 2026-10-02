@@ -355,7 +355,9 @@ private struct NotesSidebarRow: View {
             }
             .padding(.horizontal, 8)
             .padding(.vertical, 8)
+            .frame(maxWidth: .infinity, alignment: .leading)
             .background(isSelected ? accent : Color.clear)
+            .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
         .accessibilityAddTraits(isSelected ? .isSelected : [])

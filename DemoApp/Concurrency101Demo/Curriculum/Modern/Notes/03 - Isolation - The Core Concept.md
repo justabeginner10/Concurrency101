@@ -1,6 +1,6 @@
 # Module 03 — Isolation: The Core Concept
 
-> Roadmap: [[00 - Roadmap]] · Terms: [[Glossary]] · Prev: [[02 - Async Await Deep Dive]] ·
+> Terms: [[Glossary]] · Prev: [[02 - Async Await Deep Dive]] ·
 > Next: [[04 - Actors]] · While coding: [[00 - Decision Procedure]]
 > **Goal:** look at any declaration and state its isolation, and say *how you know*.
 > Drill: [[Drill 03 - Reading Isolation]]
@@ -153,7 +153,8 @@ class Base { @MainActor func run() { } }
 class Sub: Base { override func run() { } }   // still @MainActor
 ```
 
-You cannot widen isolation in an override. Subclasses inherit their superclass's isolation.
+You cannot drop isolation in an override. A `@MainActor` method stays `@MainActor` in the
+subclass; you cannot override it as `nonisolated`.
 
 ### 3.5 — The module default ⚠️
 
@@ -428,8 +429,5 @@ teams end up with everything on main and no idea how it happened.
 
 → **[[Drill 03 - Reading Isolation]]**
 
-You're done with this module when you can, in the lab, predict the output of a file that mixes
-all three domains — *before running it* — and be right. Not "understand it after." Predict it.
-
-Log every wrong prediction in the Error Log in [[Progress]]. The wrong ones are the curriculum;
-the right ones are just confirmation.
+You're done with this module when you can predict the output of a file that mixes all three
+domains — *before running it* — and be right. Not "understand it after." Predict it.

@@ -1,6 +1,6 @@
 # Glossary
 
-> Roadmap: [[00 - Roadmap]] · While coding: [[00 - Decision Procedure]] · Progress: [[Progress]]
+> Terms: [[Glossary]] · While coding: [[00 - Decision Procedure]]
 > Precision matters here — **most concurrency confusion is vocabulary confusion.**
 
 ---
@@ -55,9 +55,10 @@ stored on the heap rather than a thread stack. Also the explicit bridging API
 forever, two crashes. [[07 - Bridging Legacy Code]]
 
 ### Cooperative thread pool
-The fixed-size pool the runtime schedules tasks onto — roughly one thread per core.
-"Cooperative" because tasks yield voluntarily (by suspending) rather than being preempted.
-**Blocking one of these threads is the cardinal sin** and can deadlock the whole app.
+The fixed-size pool the runtime schedules concurrent tasks onto — roughly one thread per core.
+"Cooperative" because a job runs until it **suspends**; the Swift runtime does not preempt it.
+(The OS can still preempt the thread.) **Blocking one of these threads is the cardinal sin**
+and can deadlock the whole app.
 [[01 - Mental Model]]
 
 ### Default actor isolation
@@ -119,8 +120,10 @@ means. Same rules as `@unchecked Sendable`: needs a real mechanism and a comment
 
 ### Parallelism
 Multiple tasks *executing at the same instant* on different cores. Requires concurrency;
-concurrency does not require it. `await` gives concurrency — parallelism needs *separate tasks*
-(`async let`, task groups) that are also `nonisolated`.
+concurrency does not require it. Sequential `await`s are concurrent with the world, but not
+with each other. Parallelism needs *separate tasks* (`async let`, task groups) that actually
+leave the caller's executor — under Xcode 26 defaults that usually means `@concurrent`
+`nonisolated`, not merely `nonisolated`.
 
 ### `@preconcurrency`
 Marks an import, protocol or declaration as predating concurrency checking, downgrading related

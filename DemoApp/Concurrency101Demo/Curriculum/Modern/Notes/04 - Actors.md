@@ -1,6 +1,6 @@
 # Module 04 — Actors
 
-> Roadmap: [[00 - Roadmap]] · Terms: [[Glossary]] · Prev: [[03 - Isolation - The Core Concept]] ·
+> Terms: [[Glossary]] · Prev: [[03 - Isolation - The Core Concept]] ·
 > Next: [[05 - MainActor and Global Actors]]
 > **Goal:** protect mutable state correctly, and be able to point at the exact line where a
 > reentrancy bug lives. Drill: [[Drill 04 - The Reentrancy Bug]]
@@ -63,6 +63,7 @@ actor Counter {
     private var value = 0
 
     func increment() { value += 1 }
+    func snapshot() -> Int { value }
     func addAll(_ ns: [Int]) {
         for n in ns { value += n }      // inside: synchronous, direct access
     }
@@ -70,7 +71,7 @@ actor Counter {
 
 func caller(_ c: Counter) async {
     await c.increment()                 // outside: await required
-    let v = await c.value               // reading is a hop too
+    let v = await c.snapshot()          // reading is a hop too
 }
 ```
 
