@@ -33,8 +33,8 @@ struct DrillComingSoonView: View {
             }
         }
         .navigationTitle("Drill")
-        .navigationBarTitleDisplayMode(.inline)
         #if os(iOS)
+        .navigationBarTitleDisplayMode(.inline)
         .toolbar(.visible, for: .navigationBar)
         .toolbarBackground(DemoTheme.void, for: .navigationBar)
         .toolbarBackground(.visible, for: .navigationBar)

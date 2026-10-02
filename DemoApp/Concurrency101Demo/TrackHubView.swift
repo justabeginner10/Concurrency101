@@ -25,8 +25,8 @@ struct TrackHubView: View {
             }
         }
         .navigationTitle(track.hubNavigationTitle)
-        .navigationBarTitleDisplayMode(.inline)
         #if os(iOS)
+        .navigationBarTitleDisplayMode(.inline)
         .toolbar(.visible, for: .navigationBar)
         .toolbarBackground(DemoTheme.void, for: .navigationBar)
         .toolbarBackground(.visible, for: .navigationBar)

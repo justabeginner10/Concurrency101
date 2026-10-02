@@ -32,19 +32,22 @@ struct ConsoleOverlay: View {
 
             ScrollViewReader { proxy in
                 ScrollView {
-                    LazyVStack(alignment: .leading, spacing: 3) {
+                    LazyVStack(alignment: .leading, spacing: 6) {
                         if log.entries.isEmpty {
                             Text("Run a lesson. Lines print here and in the Xcode console.")
                                 .font(.system(size: 12, design: .monospaced))
                                 .foregroundStyle(DemoTheme.muted)
                                 .padding(.top, 8)
                         }
-                        ForEach(log.entries) { entry in
-                            Text(entry.consoleLine)
-                                .font(.system(size: 11, design: .monospaced))
-                                .foregroundStyle(entry.isMainThread ? DemoTheme.phosphor : DemoTheme.cyan)
-                                .textSelection(.enabled)
-                                .id(entry.id)
+                        ForEach(Array(log.entries.enumerated()), id: \.element.id) { index, entry in
+                            GutteredLine(
+                                number: index + 1,
+                                gutterWidth: log.entries.count >= 100 ? 28 : 22,
+                                attributedText: DemoSyntax.highlight(entry.consoleLine),
+                                fontSize: 11,
+                                ruleColor: entry.isMainThread ? DemoTheme.phosphor : DemoTheme.cyan
+                            )
+                            .id(entry.id)
                         }
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -77,4 +80,78 @@ enum DemoTheme {
     static let cyan = Color(red: 0.49, green: 0.72, blue: 0.79)
     static let freeze = Color(red: 0.77, green: 0.36, blue: 0.36)
     static let muted = Color.white.opacity(0.45)
+
+    static let syntaxBrand = phosphor
+    static let syntaxLog = Color(red: 0.93, green: 0.50, blue: 0.70)
+    static let syntaxKeyword = Color(red: 0.73, green: 0.64, blue: 0.93)
+    static let syntaxType = cyan
+    static let syntaxCall = Color(red: 0.96, green: 0.84, blue: 0.52)
+    static let syntaxString = Color(red: 0.63, green: 0.84, blue: 0.58)
+    static let syntaxNumber = Color(red: 0.95, green: 0.68, blue: 0.42)
+    static let syntaxPlain = Color.white.opacity(0.86)
+}
+
+/// One logical line with a numbered gutter. Soft-wraps hang under the text,
+/// so a wrap is not mistaken for a new line.
+struct GutteredLine: View {
+    let number: Int
+    let gutterWidth: CGFloat
+    let attributedText: AttributedString
+    var fontSize: CGFloat = 12
+    var ruleColor: Color = DemoTheme.phosphor
+
+    var body: some View {
+        HStack(alignment: .firstTextBaseline, spacing: 8) {
+            Text(verbatim: "\(number)")
+                .font(.system(size: fontSize, design: .monospaced))
+                .monospacedDigit()
+                .foregroundStyle(DemoTheme.muted)
+                .frame(width: gutterWidth, alignment: .trailing)
+
+            Text(verbatim: "│")
+                .font(.system(size: fontSize, design: .monospaced))
+                .foregroundStyle(ruleColor.opacity(0.4))
+
+            Text(attributedText)
+                .font(.system(size: fontSize, design: .monospaced))
+                .lineSpacing(3)
+                .textSelection(.enabled)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+    }
+}
+
+struct NumberedSourceBlock: View {
+    let source: String
+    var fontSize: CGFloat = 12
+    var ruleColor: Color = DemoTheme.phosphor
+
+    var body: some View {
+        let rows = Self.rows(from: source)
+        let width: CGFloat = rows.count >= 100 ? 28 : 22
+        VStack(alignment: .leading, spacing: 4) {
+            ForEach(rows, id: \.number) { row in
+                GutteredLine(
+                    number: row.number,
+                    gutterWidth: width,
+                    attributedText: DemoSyntax.highlight(row.text),
+                    fontSize: fontSize,
+                    ruleColor: ruleColor
+                )
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private static func rows(from source: String) -> [(number: Int, text: String)] {
+        var parts = source.split(separator: "\n", omittingEmptySubsequences: false).map(String.init)
+        if parts.count > 1, parts.last?.isEmpty == true {
+            parts.removeLast()
+        }
+        if parts.isEmpty {
+            parts = [""]
+        }
+        return parts.enumerated().map { (number: $0.offset + 1, text: $0.element) }
+    }
 }

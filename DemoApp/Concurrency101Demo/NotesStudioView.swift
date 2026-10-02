@@ -117,8 +117,8 @@ struct NotesStudioView: View {
             }
         }
         .navigationTitle(session.selected.map(\.title) ?? "Notes")
-        .navigationBarTitleDisplayMode(.inline)
         #if os(iOS)
+        .navigationBarTitleDisplayMode(.inline)
         .toolbar(.visible, for: .navigationBar)
         .toolbarBackground(DemoTheme.void, for: .navigationBar)
         .toolbarBackground(.visible, for: .navigationBar)
@@ -127,13 +127,15 @@ struct NotesStudioView: View {
             if overlaySidebar {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button {
-                        withAnimation(.easeInOut(duration: 0.22)) {
+                        withAnimation(NotesDrawer.animation) {
                             session.sidebarOpen.toggle()
                         }
                     } label: {
-                        Text(session.sidebarOpen ? "Close index" : "Index")
-                            .font(.system(size: 13, design: .monospaced))
+                        Image(systemName: session.sidebarOpen ? "xmark" : "sidebar.right")
+                            .font(.system(size: 16, weight: .medium))
                             .foregroundStyle(track.accent)
+                            .frame(width: 28, height: 28)
+                            .contentTransition(.symbolEffect(.replace))
                     }
                     .accessibilityLabel(session.sidebarOpen ? "Close notes index" : "Open notes index")
                 }
@@ -149,6 +151,12 @@ private struct RegularNotesLayout: View {
 
     var body: some View {
         HStack(spacing: 0) {
+            NoteReaderPane(session: session, accent: accent, collapseOnLink: false)
+
+            Rectangle()
+                .fill(accent.opacity(0.22))
+                .frame(width: 1)
+
             NotesSidebar(
                 sections: session.visibleSections,
                 selectedID: session.selectedID,
@@ -157,14 +165,13 @@ private struct RegularNotesLayout: View {
                 onSelect: { session.select($0, collapseSidebar: false) }
             )
             .frame(width: 292)
-
-            Rectangle()
-                .fill(accent.opacity(0.22))
-                .frame(width: 1)
-
-            NoteReaderPane(session: session, accent: accent, collapseOnLink: false)
         }
     }
+}
+
+private enum NotesDrawer {
+    static let width: CGFloat = 320
+    static let animation: Animation = .easeInOut(duration: 0.22)
 }
 
 private struct CompactNotesLayout: View {
@@ -172,36 +179,50 @@ private struct CompactNotesLayout: View {
     let accent: Color
 
     var body: some View {
-        ZStack(alignment: .leading) {
+        ZStack(alignment: .trailing) {
             NoteReaderPane(session: session, accent: accent, collapseOnLink: true)
 
-            if session.sidebarOpen {
-                Color.black.opacity(0.46)
-                    .ignoresSafeArea()
-                    .onTapGesture {
-                        withAnimation(.easeInOut(duration: 0.22)) {
-                            session.sidebarOpen = false
-                        }
-                    }
-                    .accessibilityLabel("Dismiss notes index")
-
-                NotesSidebar(
-                    sections: session.visibleSections,
-                    selectedID: session.selectedID,
-                    query: $session.query,
-                    accent: accent,
-                    onSelect: { id in
-                        withAnimation(.easeInOut(duration: 0.22)) {
-                            session.select(id, collapseSidebar: true)
-                        }
-                    }
-                )
-                .frame(maxWidth: 320)
-                .background(DemoTheme.void)
-                .transition(.move(edge: .leading).combined(with: .opacity))
+            NotesDrawerScrim(isOpen: session.sidebarOpen) {
+                withAnimation(NotesDrawer.animation) {
+                    session.sidebarOpen = false
+                }
             }
+
+            NotesSidebar(
+                sections: session.visibleSections,
+                selectedID: session.selectedID,
+                query: $session.query,
+                accent: accent,
+                onSelect: { id in
+                    session.select(id, collapseSidebar: false)
+                    withAnimation(NotesDrawer.animation) {
+                        session.sidebarOpen = false
+                    }
+                }
+            )
+            .frame(width: NotesDrawer.width)
+            .frame(maxHeight: .infinity)
+            .background(DemoTheme.void)
+            .offset(x: session.sidebarOpen ? 0 : NotesDrawer.width)
+            .allowsHitTesting(session.sidebarOpen)
+            .accessibilityHidden(!session.sidebarOpen)
         }
-        .animation(.easeInOut(duration: 0.22), value: session.sidebarOpen)
+        .animation(NotesDrawer.animation, value: session.sidebarOpen)
+    }
+}
+
+private struct NotesDrawerScrim: View {
+    let isOpen: Bool
+    let onDismiss: () -> Void
+
+    var body: some View {
+        Color.black
+            .opacity(isOpen ? 0.46 : 0)
+            .ignoresSafeArea()
+            .allowsHitTesting(isOpen)
+            .onTapGesture(perform: onDismiss)
+            .accessibilityLabel("Dismiss notes index")
+            .accessibilityHidden(!isOpen)
     }
 }
 

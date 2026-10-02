@@ -55,12 +55,12 @@ struct CodeSnippetView: View {
             Divider().overlay(DemoTheme.phosphor.opacity(0.22))
 
             ScrollView(.vertical, showsIndicators: true) {
-                Text(displayed)
-                    .font(.system(size: 12, design: .monospaced))
-                    .foregroundStyle(Color.white.opacity(0.88))
-                    .textSelection(.enabled)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(12)
+                NumberedSourceBlock(
+                    source: displayed,
+                    fontSize: 12,
+                    ruleColor: showAppleAPI ? DemoTheme.cyan : DemoTheme.phosphor
+                )
+                .padding(12)
             }
             .frame(minHeight: 140, maxHeight: 260)
         }
