@@ -6,7 +6,7 @@ struct ConsoleOverlay: View {
         case pane
     }
 
-    @ObservedObject var log: DemoLog
+    let log: DemoLog
     @Binding var expanded: Bool
     var chrome: Chrome = .docked
     var isMaximized: Bool = false
@@ -84,10 +84,10 @@ struct ConsoleOverlay: View {
         .frame(height: chrome == .docked ? (expanded ? 340 : 168) : nil)
         .frame(maxHeight: chrome == .pane ? .infinity : nil)
         .background(.ultraThinMaterial, in: Rectangle())
-        .overlay(
+        .overlay {
             Rectangle()
                 .strokeBorder(DemoTheme.phosphor.opacity(0.22), lineWidth: 0.5)
-        )
+        }
         .shadow(color: Color.black.opacity(chrome == .docked ? 0.35 : 0), radius: chrome == .docked ? 18 : 0, y: chrome == .docked ? -4 : 0)
     }
 }

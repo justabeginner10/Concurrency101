@@ -37,10 +37,10 @@ struct ChoiceCard<Glyph: View>: View {
             .frame(maxWidth: .infinity, minHeight: minHeight, alignment: .topLeading)
             .padding(20)
             .background(Color.white.opacity(0.04))
-            .overlay(
+            .overlay {
                 Rectangle()
                     .strokeBorder(accent.opacity(0.45), lineWidth: 1)
-            )
+            }
         }
         .buttonStyle(.plain)
         .accessibilityLabel(title)

@@ -65,7 +65,7 @@ struct CodeSnippetView: View {
 
             Divider().overlay(DemoTheme.phosphor.opacity(0.22))
 
-            ScrollView(.vertical, showsIndicators: true) {
+            ScrollView(.vertical) {
                 NumberedSourceBlock(
                     source: displayed,
                     fontSize: CGFloat(sourceFontSize),
@@ -80,10 +80,10 @@ struct CodeSnippetView: View {
         }
         .frame(maxHeight: fillsAvailableHeight ? .infinity : nil)
         .background(Color.white.opacity(0.05))
-        .overlay(
+        .overlay {
             RoundedRectangle(cornerRadius: 4, style: .continuous)
                 .strokeBorder(DemoTheme.phosphor.opacity(0.22), lineWidth: 0.5)
-        )
+        }
         .clipShape(RoundedRectangle(cornerRadius: 4, style: .continuous))
     }
 

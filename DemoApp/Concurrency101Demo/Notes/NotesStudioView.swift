@@ -27,6 +27,7 @@ struct NotesStudioView: View {
                 )
             }
         }
+        .onAppear { session.loadSelectedIfNeeded() }
         .navigationTitle(session.selected.map(\.title) ?? "Notes")
         .demoRoomChrome()
         #if os(iOS)
@@ -199,10 +200,10 @@ private struct NotesSidebarHeader: View {
             .padding(.horizontal, 10)
             .padding(.vertical, 8)
             .background(Color.white.opacity(0.05))
-            .overlay(
+            .overlay {
                 Rectangle()
                     .strokeBorder(accent.opacity(0.28), lineWidth: 1)
-            )
+            }
         }
         .padding(.horizontal, 14)
         .padding(.top, 16)
@@ -219,7 +220,7 @@ private struct NotesSidebarSection: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text(verbatim: title.uppercased())
+            Text(verbatim: title.localizedUppercase)
                 .font(.system(size: DemoLayout.typeSize(11), design: .monospaced))
                 .foregroundStyle(DemoTheme.muted)
                 .padding(.horizontal, 8)

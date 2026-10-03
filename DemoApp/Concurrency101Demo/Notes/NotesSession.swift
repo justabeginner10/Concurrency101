@@ -7,20 +7,25 @@ final class NotesSession {
     let track: LearningTrack
     let sections: [CurriculumSection]
     var selectedID: String
-    var query: String = ""
+    var query: String = "" {
+        didSet { visibleSections = Self.filter(sections, matching: query) }
+    }
     var sidebarOpen: Bool
+
+    /// Filtered once per `query` change, not on every body pass.
+    private(set) var visibleSections: [CurriculumSection]
 
     private var cache: [String: String] = [:]
 
+    /// Cheap on purpose: SwiftUI rebuilds `@State` initial values on every
+    /// view init. The first note loads in `loadSelectedIfNeeded()`.
     init(track: LearningTrack, sidebarOpen: Bool) {
         let sections = CurriculumCatalog.sections(for: track)
         self.track = track
         self.sections = sections
         self.selectedID = sections.first?.notes.first?.id ?? ""
         self.sidebarOpen = sidebarOpen
-        if let first = sections.first?.notes.first {
-            cache[first.id] = Self.prepared(first, track: track)
-        }
+        self.visibleSections = sections
     }
 
     var allNotes: [CurriculumNote] {
@@ -33,20 +38,6 @@ final class NotesSession {
 
     var markdown: String {
         cache[selectedID] ?? ""
-    }
-
-    var visibleSections: [CurriculumSection] {
-        let trimmed = query.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty else { return sections }
-        return sections.compactMap { section in
-            let matches = section.notes.filter { note in
-                note.title.localizedCaseInsensitiveContains(trimmed)
-                    || note.id.localizedCaseInsensitiveContains(trimmed)
-                    || note.indexLabel.localizedCaseInsensitiveContains(trimmed)
-            }
-            guard !matches.isEmpty else { return nil }
-            return CurriculumSection(id: section.id, title: section.title, notes: matches)
-        }
     }
 
     var previousID: String? {
@@ -63,6 +54,10 @@ final class NotesSession {
         if collapseSidebar {
             sidebarOpen = false
         }
+    }
+
+    func loadSelectedIfNeeded() {
+        loadIfNeeded(selectedID)
     }
 
     func openWikilink(_ url: URL, collapseSidebar: Bool) {
@@ -82,6 +77,20 @@ final class NotesSession {
     private func loadIfNeeded(_ id: String) {
         guard cache[id] == nil, let note = CurriculumCatalog.note(id: id, in: track) else { return }
         cache[id] = Self.prepared(note, track: track)
+    }
+
+    private static func filter(_ sections: [CurriculumSection], matching query: String) -> [CurriculumSection] {
+        let trimmed = query.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return sections }
+        return sections.compactMap { section in
+            let matches = section.notes.filter { note in
+                note.title.localizedCaseInsensitiveContains(trimmed)
+                    || note.id.localizedCaseInsensitiveContains(trimmed)
+                    || note.indexLabel.localizedCaseInsensitiveContains(trimmed)
+            }
+            guard !matches.isEmpty else { return nil }
+            return CurriculumSection(id: section.id, title: section.title, notes: matches)
+        }
     }
 
     private static func prepared(_ note: CurriculumNote, track: LearningTrack) -> String {

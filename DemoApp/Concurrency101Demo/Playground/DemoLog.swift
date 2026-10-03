@@ -1,11 +1,14 @@
 import Foundation
+import Observation
 
 /// Dual-sink logger: Xcode's console (`print`) and the in-app overlay.
 ///
 /// Call `log` from any queue. `print` happens immediately on that thread so
 /// Xcode shows the same line at the same time. The overlay is updated on the
 /// main queue.
-final class DemoLog: ObservableObject {
+@MainActor
+@Observable
+final class DemoLog {
     struct Entry: Identifiable, Equatable {
         let id: UUID
         let uptime: TimeInterval
@@ -18,12 +21,12 @@ final class DemoLog: ObservableObject {
         }
     }
 
-    @Published private(set) var entries: [Entry] = []
+    private(set) var entries: [Entry] = []
 
     private static let overlayCap = 400
 
     /// Writes one line to Xcode and to the transparent console.
-    func log(_ text: String) {
+    nonisolated func log(_ text: String) {
         let entry = Entry(
             id: UUID(),
             uptime: ProcessInfo.processInfo.systemUptime,
@@ -32,17 +35,21 @@ final class DemoLog: ObservableObject {
         )
         print(entry.consoleLine)
         DispatchQueue.main.async {
-            self.entries.append(entry)
-            let overflow = self.entries.count - Self.overlayCap
-            if overflow > 0 {
-                self.entries.removeFirst(overflow)
+            MainActor.assumeIsolated {
+                self.entries.append(entry)
+                let overflow = self.entries.count - Self.overlayCap
+                if overflow > 0 {
+                    self.entries.removeFirst(overflow)
+                }
             }
         }
     }
 
-    func clear() {
+    nonisolated func clear() {
         DispatchQueue.main.async {
-            self.entries.removeAll()
+            MainActor.assumeIsolated {
+                self.entries.removeAll()
+            }
         }
         print("— console cleared —")
     }
