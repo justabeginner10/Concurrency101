@@ -42,7 +42,7 @@ struct TrackHubView: View {
             case .notes:
                 NotesStudioView(track: track)
             case .drill:
-                DrillComingSoonView(track: track)
+                DrillView(track: track)
             }
         }
     }
@@ -57,7 +57,7 @@ private struct TrackHubHeader: View {
             Text(verbatim: trackTitle)
                 .font(.system(size: DemoLayout.typeSize(28), weight: .regular, design: .serif))
                 .foregroundStyle(accent)
-            Text("Three rooms. Playground runs the lessons. Notes is the curriculum. Drill will be the quiz — not in this build.")
+            Text("Three rooms. Playground runs the lessons. Notes is the curriculum. Drill is the closed-book quiz.")
                 .font(.system(size: DemoLayout.typeSize(16), design: .serif))
                 .foregroundStyle(Color.white.opacity(0.78))
                 .fixedSize(horizontal: false, vertical: true)
