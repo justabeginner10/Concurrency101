@@ -12,6 +12,8 @@ struct CodeSnippetView: View {
     var appleChip: String = "Swift"
     @Binding var showAppleAPI: Bool
     var fillsAvailableHeight: Bool = false
+    var isMaximized: Bool = false
+    var onToggleMaximize: (() -> Void)? = nil
     @AppStorage(DemoSourceType.storageKey) private var sourceFontSize = DemoSourceType.defaultSize
     @State private var copied = false
 
@@ -37,8 +39,10 @@ struct CodeSnippetView: View {
                         .tint(DemoTheme.cyan)
                         .fixedSize()
                     Text(verbatim: appleChip)
-                        .font(.system(size: DemoLayout.typeSize(11), design: .monospaced))
+                        .font(.system(size: DemoLayout.typeSize(9), design: .monospaced))
                         .foregroundStyle(showAppleAPI ? DemoTheme.cyan : DemoTheme.muted)
+                        .lineLimit(1)
+                        .fixedSize()
                 }
 
                 Button(copied ? "Copied" : "Copy") {
@@ -51,6 +55,10 @@ struct CodeSnippetView: View {
                 .font(.system(size: DemoLayout.typeSize(11), design: .monospaced))
                 .buttonStyle(.plain)
                 .foregroundStyle(DemoTheme.cyan)
+
+                if let onToggleMaximize {
+                    PanelSizeButton(isMaximized: isMaximized, action: onToggleMaximize)
+                }
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 8)

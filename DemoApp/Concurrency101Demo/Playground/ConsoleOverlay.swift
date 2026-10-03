@@ -9,11 +9,13 @@ struct ConsoleOverlay: View {
     @ObservedObject var log: DemoLog
     @Binding var expanded: Bool
     var chrome: Chrome = .docked
+    var isMaximized: Bool = false
+    var onToggleMaximize: (() -> Void)? = nil
     @AppStorage(DemoSourceType.storageKey) private var sourceFontSize = DemoSourceType.defaultSize
 
     var body: some View {
         VStack(spacing: 0) {
-            HStack(alignment: .firstTextBaseline, spacing: 12) {
+            HStack(alignment: .center, spacing: 12) {
                 Text("trace")
                     .font(.system(size: DemoLayout.typeSize(12), design: .serif))
                     .foregroundStyle(DemoTheme.phosphor.opacity(0.85))
@@ -33,6 +35,9 @@ struct ConsoleOverlay: View {
                     .font(.system(size: DemoLayout.typeSize(11), design: .monospaced))
                     .buttonStyle(.plain)
                     .foregroundStyle(DemoTheme.phosphor)
+                if let onToggleMaximize {
+                    PanelSizeButton(isMaximized: isMaximized, action: onToggleMaximize)
+                }
             }
             .padding(.horizontal, 14)
             .padding(.vertical, 8)

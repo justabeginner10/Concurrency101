@@ -9,6 +9,7 @@ struct WorkbenchView: View {
     @State private var confirmDeadlock = false
     @State private var showCheatSheet = false
     @State private var showAppleAPI = false
+    @State private var maximizedPanel: WorkbenchPanel?
     @Environment(\.usesPhoneChrome) private var usesPhoneChrome
 
     private var scenarios: [DemoScenario] {
@@ -40,7 +41,9 @@ struct WorkbenchView: View {
                     consoleExpanded: $consoleExpanded,
                     showAppleAPI: $showAppleAPI,
                     onSelect: { selectedID = $0 },
-                    onRun: runSelected
+                    onRun: runSelected,
+                    onMaximizeCode: { maximize(.code) },
+                    onMaximizeConsole: { maximize(.console) }
                 )
             } else {
                 PadWorkbenchLayout(
@@ -54,8 +57,26 @@ struct WorkbenchView: View {
                     log: log,
                     showAppleAPI: $showAppleAPI,
                     onSelect: { selectedID = $0 },
-                    onRun: runSelected
+                    onRun: runSelected,
+                    onMaximizeCode: { maximize(.code) },
+                    onMaximizeConsole: { maximize(.console) }
                 )
+            }
+        }
+        .overlay {
+            if let maximizedPanel {
+                WorkbenchMaximizeOverlay(
+                    panel: maximizedPanel,
+                    teachingSnippet: selected.teachingSnippet,
+                    appleSnippet: selected.appleSnippet,
+                    appleLabel: track.appleLabel,
+                    appleChip: track.shortTitle,
+                    showAppleAPI: $showAppleAPI,
+                    log: log,
+                    consoleExpanded: $consoleExpanded,
+                    onMinimize: minimize
+                )
+                .transition(.opacity)
             }
         }
         .onAppear {
@@ -90,6 +111,18 @@ struct WorkbenchView: View {
             selected.run(log)
         }
     }
+
+    private func maximize(_ panel: WorkbenchPanel) {
+        withAnimation(.easeInOut(duration: 0.2)) {
+            maximizedPanel = panel
+        }
+    }
+
+    private func minimize() {
+        withAnimation(.easeInOut(duration: 0.2)) {
+            maximizedPanel = nil
+        }
+    }
 }
 
 private struct PhoneWorkbenchLayout: View {
@@ -105,6 +138,8 @@ private struct PhoneWorkbenchLayout: View {
     @Binding var showAppleAPI: Bool
     let onSelect: (String) -> Void
     let onRun: () -> Void
+    let onMaximizeCode: () -> Void
+    let onMaximizeConsole: () -> Void
 
     var body: some View {
         ZStack(alignment: .bottom) {
@@ -122,16 +157,22 @@ private struct PhoneWorkbenchLayout: View {
                         appleLabel: appleLabel,
                         appleChip: appleChip,
                         showAppleAPI: $showAppleAPI,
-                        onRun: onRun
+                        onRun: onRun,
+                        onMaximizeCode: onMaximizeCode
                     )
                 }
                 .padding(.bottom, consoleExpanded ? 348 : 176)
             }
             .padding(.bottom, 8)
 
-            ConsoleOverlay(log: log, expanded: $consoleExpanded, chrome: .docked)
-                .padding(.horizontal, 10)
-                .padding(.bottom, 8)
+            ConsoleOverlay(
+                log: log,
+                expanded: $consoleExpanded,
+                chrome: .docked,
+                onToggleMaximize: onMaximizeConsole
+            )
+            .padding(.horizontal, 10)
+            .padding(.bottom, 8)
         }
     }
 }
@@ -148,6 +189,8 @@ private struct PadWorkbenchLayout: View {
     @Binding var showAppleAPI: Bool
     let onSelect: (String) -> Void
     let onRun: () -> Void
+    let onMaximizeCode: () -> Void
+    let onMaximizeConsole: () -> Void
     @State private var consoleExpanded = true
     @Environment(\.verticalSizeClass) private var verticalSizeClass
 
@@ -194,11 +237,17 @@ private struct PadWorkbenchLayout: View {
                     appleLabel: appleLabel,
                     appleChip: appleChip,
                     showAppleAPI: $showAppleAPI,
-                    fillsAvailableHeight: true
+                    fillsAvailableHeight: true,
+                    onToggleMaximize: onMaximizeCode
                 )
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
-                ConsoleOverlay(log: log, expanded: $consoleExpanded, chrome: .pane)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                ConsoleOverlay(
+                    log: log,
+                    expanded: $consoleExpanded,
+                    chrome: .pane,
+                    onToggleMaximize: onMaximizeConsole
+                )
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
             .padding(.horizontal, 16)
             .padding(.bottom, compactVertical ? 8 : 12)
@@ -374,6 +423,7 @@ private struct LessonBody: View {
     let appleChip: String
     @Binding var showAppleAPI: Bool
     let onRun: () -> Void
+    var onMaximizeCode: (() -> Void)? = nil
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -383,10 +433,69 @@ private struct LessonBody: View {
                 appleSnippet: scenario.appleSnippet,
                 appleLabel: appleLabel,
                 appleChip: appleChip,
-                showAppleAPI: $showAppleAPI
+                showAppleAPI: $showAppleAPI,
+                onToggleMaximize: onMaximizeCode
             )
             RunLessonButton(isDestructive: scenario.isDestructive, action: onRun)
         }
         .padding(.horizontal, 16)
+    }
+}
+
+private enum WorkbenchPanel {
+    case code
+    case console
+}
+
+private struct WorkbenchMaximizeOverlay: View {
+    let panel: WorkbenchPanel
+    let teachingSnippet: String
+    let appleSnippet: String
+    let appleLabel: String
+    let appleChip: String
+    @Binding var showAppleAPI: Bool
+    @ObservedObject var log: DemoLog
+    @Binding var consoleExpanded: Bool
+    let onMinimize: () -> Void
+
+    var body: some View {
+        GeometryReader { geo in
+            ZStack {
+                Color.black.opacity(0.55)
+                    .ignoresSafeArea()
+                    .onTapGesture(perform: onMinimize)
+                    .accessibilityLabel("Dismiss maximized panel")
+                    .accessibilityAddTraits(.isButton)
+
+                Group {
+                    switch panel {
+                    case .code:
+                        CodeSnippetView(
+                            teachingSnippet: teachingSnippet,
+                            appleSnippet: appleSnippet,
+                            appleLabel: appleLabel,
+                            appleChip: appleChip,
+                            showAppleAPI: $showAppleAPI,
+                            fillsAvailableHeight: true,
+                            isMaximized: true,
+                            onToggleMaximize: onMinimize
+                        )
+                    case .console:
+                        ConsoleOverlay(
+                            log: log,
+                            expanded: $consoleExpanded,
+                            chrome: .pane,
+                            isMaximized: true,
+                            onToggleMaximize: onMinimize
+                        )
+                    }
+                }
+                .frame(width: max(0, geo.size.width - 32), height: max(0, geo.size.height - 32))
+                .background(DemoTheme.void)
+                .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
+                .shadow(color: Color.black.opacity(0.45), radius: 24, y: 8)
+            }
+            .frame(width: geo.size.width, height: geo.size.height)
+        }
     }
 }
