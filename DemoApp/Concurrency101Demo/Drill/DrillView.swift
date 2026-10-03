@@ -22,15 +22,6 @@ struct DrillView: View {
         }
         .navigationTitle(title)
         .demoRoomChrome()
-        .toolbar {
-            if session.phase == .running {
-                ToolbarItem(placement: .primaryAction) {
-                    Text(verbatim: session.difficulty.title)
-                        .font(.system(size: DemoLayout.typeSize(13), design: .monospaced))
-                        .foregroundStyle(track.accent)
-                }
-            }
-        }
     }
 
     private var title: String {

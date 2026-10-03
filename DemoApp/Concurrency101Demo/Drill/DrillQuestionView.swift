@@ -1,4 +1,7 @@
 import SwiftUI
+#if os(iOS)
+import UIKit
+#endif
 
 struct DrillQuestionView: View {
     @Bindable var session: DrillSession
@@ -75,7 +78,6 @@ private struct DrillQuestionPage: View {
                                 isLocked: pick != nil,
                                 isPicked: pick == option.originalIndex,
                                 isKeyed: option.originalIndex == correctIndex,
-                                accent: accent,
                                 action: { onPick(option.originalIndex) }
                             )
                         }
@@ -107,7 +109,6 @@ private struct DrillOptionRow: View {
     let isLocked: Bool
     let isPicked: Bool
     let isKeyed: Bool
-    let accent: Color
     let action: () -> Void
 
     var body: some View {
@@ -135,31 +136,37 @@ private struct DrillOptionRow: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .disabled(isLocked)
+        .allowsHitTesting(!isLocked)
         .accessibilityAddTraits(isPicked ? .isSelected : [])
     }
 
+    private var showsHit: Bool {
+        isLocked && isKeyed
+    }
+
+    private var showsMiss: Bool {
+        isPicked && !isKeyed
+    }
+
     private var fill: Color {
-        if isPicked && isKeyed { return accent.opacity(0.92) }
-        if isPicked && !isKeyed { return DemoTheme.freeze.opacity(0.88) }
-        if isLocked && isKeyed { return accent.opacity(0.18) }
+        if showsHit { return DemoTheme.hit }
+        if showsMiss { return DemoTheme.freeze }
         return Color.white.opacity(0.04)
     }
 
     private var border: Color {
-        if isPicked { return Color.clear }
-        if isLocked && isKeyed { return accent }
+        if showsHit { return DemoTheme.hit }
+        if showsMiss { return DemoTheme.freeze }
         return Color.white.opacity(0.08)
     }
 
     private var markColor: Color {
-        if isPicked { return DemoTheme.void }
-        if isLocked && isKeyed { return accent }
+        if showsHit || showsMiss { return DemoTheme.void }
         return DemoTheme.muted
     }
 
     private var bodyColor: Color {
-        if isPicked { return DemoTheme.void }
+        if showsHit || showsMiss { return DemoTheme.void }
         return Color.white.opacity(0.88)
     }
 }
@@ -218,23 +225,59 @@ private struct DrillExplainButton: View {
         }
         .foregroundStyle(enabled ? accent : DemoTheme.muted)
         .disabled(!enabled)
-        .popover(isPresented: $isPresented, arrowEdge: .bottom) {
-            DrillExplainSheet(
+        .modifier(
+            DrillExplainPresentation(
+                isPresented: $isPresented,
                 sourceNote: sourceNote,
                 explanation: explanation,
-                accent: accent,
-                onDismiss: { isPresented = false }
+                accent: accent
             )
-            .frame(
-                minWidth: DemoLayout.isPadLike ? 420 : 0,
-                idealWidth: 440,
-                maxWidth: 520,
-                minHeight: DemoLayout.isPadLike ? 360 : 0,
-                idealHeight: 480,
-                maxHeight: 640
-            )
-            .presentationCompactAdaptation(.sheet)
+        )
+    }
+}
+
+private struct DrillExplainPresentation: ViewModifier {
+    @Binding var isPresented: Bool
+    let sourceNote: String
+    let explanation: String
+    let accent: Color
+
+    func body(content: Content) -> some View {
+        if DemoLayout.isPadLike {
+            content.popover(isPresented: $isPresented) {
+                sheet
+                    .frame(
+                        minWidth: 420,
+                        idealWidth: 440,
+                        maxWidth: 520,
+                        minHeight: 360,
+                        idealHeight: 480,
+                        maxHeight: 640
+                    )
+                    .presentationBackground(DemoTheme.void)
+                    .background {
+                        HidePopoverArrow()
+                            .frame(width: 0, height: 0)
+                            .accessibilityHidden(true)
+                    }
+            }
+        } else {
+            content.sheet(isPresented: $isPresented) {
+                sheet
+                    .presentationDetents([.medium, .large])
+                    .presentationDragIndicator(.visible)
+                    .presentationBackground(DemoTheme.void)
+            }
         }
+    }
+
+    private var sheet: some View {
+        DrillExplainSheet(
+            sourceNote: sourceNote,
+            explanation: explanation,
+            accent: accent,
+            onDismiss: { isPresented = false }
+        )
     }
 }
 
@@ -285,7 +328,42 @@ private struct DrillExplainSheet: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
             }
         }
-        .background(DemoTheme.void)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .background(DemoTheme.void.ignoresSafeArea())
         .preferredColorScheme(.dark)
     }
 }
+
+#if os(iOS)
+private struct HidePopoverArrow: UIViewRepresentable {
+    func makeUIView(context: Context) -> UIView {
+        ArrowHidingView()
+    }
+
+    func updateUIView(_ uiView: UIView, context: Context) {
+        (uiView as? ArrowHidingView)?.hideArrow()
+    }
+}
+
+private final class ArrowHidingView: UIView {
+    override func didMoveToWindow() {
+        super.didMoveToWindow()
+        hideArrow()
+        DispatchQueue.main.async { [weak self] in
+            self?.hideArrow()
+        }
+    }
+
+    func hideArrow() {
+        var responder: UIResponder? = self
+        while let current = responder {
+            if let controller = current as? UIViewController {
+                controller.popoverPresentationController?.permittedArrowDirections = []
+                controller.parent?.popoverPresentationController?.permittedArrowDirections = []
+            }
+            responder = current.next
+        }
+    }
+}
+#endif
+
