@@ -162,20 +162,31 @@ private struct PadWorkbenchLayout: View {
                 accent: accent,
                 showsBlurb: !compactVertical
             )
-            LessonStrip(
-                scenarios: scenarios,
-                selectedID: selectedID,
-                accent: accent,
-                onSelect: onSelect,
-                compact: compactVertical
-            )
-            PadLessonIntro(
-                compact: compactVertical,
-                appleAPI: selected.appleAPI,
-                blurb: selected.blurb,
-                isDestructive: selected.isDestructive,
-                onRun: onRun
-            )
+            if compactVertical {
+                CompactPlaygroundChrome(
+                    scenarios: scenarios,
+                    selectedID: selectedID,
+                    accent: accent,
+                    appleAPI: selected.appleAPI,
+                    blurb: selected.blurb,
+                    isDestructive: selected.isDestructive,
+                    onSelect: onSelect,
+                    onRun: onRun
+                )
+            } else {
+                LessonStrip(
+                    scenarios: scenarios,
+                    selectedID: selectedID,
+                    accent: accent,
+                    onSelect: onSelect
+                )
+                PadLessonIntro(
+                    appleAPI: selected.appleAPI,
+                    blurb: selected.blurb,
+                    isDestructive: selected.isDestructive,
+                    onRun: onRun
+                )
+            }
             HStack(alignment: .top, spacing: 12) {
                 CodeSnippetView(
                     teachingSnippet: selected.teachingSnippet,
@@ -196,30 +207,55 @@ private struct PadWorkbenchLayout: View {
     }
 }
 
+private struct CompactPlaygroundChrome: View {
+    let scenarios: [DemoScenario]
+    let selectedID: String
+    let accent: Color
+    let appleAPI: String
+    let blurb: String
+    let isDestructive: Bool
+    let onSelect: (String) -> Void
+    let onRun: () -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(alignment: .center, spacing: 10) {
+                LessonStrip(
+                    scenarios: scenarios,
+                    selectedID: selectedID,
+                    accent: accent,
+                    onSelect: onSelect,
+                    horizontalPadding: 0,
+                    bottomPadding: 0
+                )
+                .frame(minWidth: 0, maxWidth: .infinity)
+
+                RunLessonButton(
+                    isDestructive: isDestructive,
+                    fillsWidth: false,
+                    action: onRun
+                )
+            }
+            LessonCopy(appleAPI: appleAPI, blurb: blurb, compact: true)
+        }
+        .padding(.horizontal, 16)
+        .padding(.bottom, 8)
+    }
+}
+
 private struct PadLessonIntro: View {
-    let compact: Bool
     let appleAPI: String
     let blurb: String
     let isDestructive: Bool
     let onRun: () -> Void
 
     var body: some View {
-        if compact {
-            HStack(alignment: .center, spacing: 12) {
-                LessonCopy(appleAPI: appleAPI, blurb: blurb, compact: true)
-                RunLessonButton(isDestructive: isDestructive, action: onRun)
-                    .fixedSize(horizontal: true, vertical: false)
-            }
-            .padding(.horizontal, 16)
-            .padding(.bottom, 8)
-        } else {
-            VStack(alignment: .leading, spacing: 12) {
-                LessonCopy(appleAPI: appleAPI, blurb: blurb)
-                    .padding(.horizontal, 16)
-                RunLessonButton(isDestructive: isDestructive, action: onRun)
-                    .padding(.horizontal, 16)
-                    .padding(.bottom, 12)
-            }
+        VStack(alignment: .leading, spacing: 12) {
+            LessonCopy(appleAPI: appleAPI, blurb: blurb)
+                .padding(.horizontal, 16)
+            RunLessonButton(isDestructive: isDestructive, action: onRun)
+                .padding(.horizontal, 16)
+                .padding(.bottom, 12)
         }
     }
 }
@@ -252,7 +288,8 @@ private struct LessonStrip: View {
     let selectedID: String
     let accent: Color
     let onSelect: (String) -> Void
-    var compact: Bool = false
+    var horizontalPadding: CGFloat = 16
+    var bottomPadding: CGFloat = 16
 
     var body: some View {
         ScrollView(.horizontal, showsIndicators: false) {
@@ -281,9 +318,10 @@ private struct LessonStrip: View {
                     .buttonStyle(.plain)
                 }
             }
-            .padding(.horizontal, 16)
+            .padding(.horizontal, horizontalPadding)
         }
-        .padding(.bottom, compact ? 8 : 16)
+        .fixedSize(horizontal: false, vertical: true)
+        .padding(.bottom, bottomPadding)
     }
 }
 
@@ -310,19 +348,23 @@ private struct LessonCopy: View {
 
 private struct RunLessonButton: View {
     let isDestructive: Bool
+    var fillsWidth: Bool = true
     let action: () -> Void
 
     var body: some View {
         Button(action: action) {
             Text(isDestructive ? "Run (will freeze)" : "Run lesson")
                 .font(.system(size: DemoLayout.typeSize(15), weight: .medium, design: .serif))
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 12)
+                .padding(.horizontal, fillsWidth ? 16 : 14)
+                .padding(.vertical, fillsWidth ? 12 : 8)
+                .frame(maxWidth: fillsWidth ? .infinity : nil)
                 .background(isDestructive ? DemoTheme.freeze : DemoTheme.phosphor)
                 .foregroundStyle(DemoTheme.void)
         }
         .buttonStyle(.plain)
         .clipShape(RoundedRectangle(cornerRadius: 4, style: .continuous))
+        .fixedSize(horizontal: !fillsWidth, vertical: true)
+        .layoutPriority(fillsWidth ? 0 : 1)
     }
 }
 
