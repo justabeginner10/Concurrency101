@@ -9,6 +9,7 @@ struct CodeSnippetView: View {
     let teachingSnippet: String
     let appleSnippet: String
     let appleLabel: String
+    var appleChip: String = "Swift"
     @Binding var showAppleAPI: Bool
     var fillsAvailableHeight: Bool = false
     @AppStorage(DemoSourceType.storageKey) private var sourceFontSize = DemoSourceType.defaultSize
@@ -35,7 +36,7 @@ struct CodeSnippetView: View {
                         .labelsHidden()
                         .tint(DemoTheme.cyan)
                         .fixedSize()
-                    Text(appleLabel == "Apple GCD" ? "GCD" : "Swift")
+                    Text(verbatim: appleChip)
                         .font(.system(size: DemoLayout.typeSize(11), design: .monospaced))
                         .foregroundStyle(showAppleAPI ? DemoTheme.cyan : DemoTheme.muted)
                 }

@@ -12,23 +12,27 @@ struct WorkbenchView: View {
     @Environment(\.usesPhoneChrome) private var usesPhoneChrome
 
     private var scenarios: [DemoScenario] {
-        switch track {
-        case .gcd: return GCDScenarioLibrary.all
-        case .modern: return ModernScenarioLibrary.all
-        }
+        ScenarioLibrary.scenarios(for: track)
     }
 
     private var selected: DemoScenario {
-        scenarios.first { $0.id == selectedID } ?? scenarios[0]
+        if let match = scenarios.first(where: { $0.id == selectedID }) {
+            return match
+        }
+        guard let first = scenarios.first else {
+            preconditionFailure("ScenarioLibrary has no lessons for \(track)")
+        }
+        return first
     }
 
     var body: some View {
-        ZStack {
-            DemoTheme.void.ignoresSafeArea()
+        DemoCanvas {
             if usesPhoneChrome {
                 PhoneWorkbenchLayout(
                     trackTitle: track.shortTitle,
                     appleLabel: track.appleLabel,
+                    appleChip: track.shortTitle,
+                    accent: track.accent,
                     scenarios: scenarios,
                     selected: selected,
                     selectedID: selectedID,
@@ -42,6 +46,8 @@ struct WorkbenchView: View {
                 PadWorkbenchLayout(
                     trackTitle: track.shortTitle,
                     appleLabel: track.appleLabel,
+                    appleChip: track.shortTitle,
+                    accent: track.accent,
                     scenarios: scenarios,
                     selected: selected,
                     selectedID: selectedID,
@@ -53,18 +59,12 @@ struct WorkbenchView: View {
             }
         }
         .onAppear {
-            if selectedID.isEmpty {
-                selectedID = scenarios[0].id
+            if selectedID.isEmpty, let first = scenarios.first {
+                selectedID = first.id
             }
         }
         .navigationTitle("Playground")
-        #if os(iOS)
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbar(.visible, for: .navigationBar)
-        .toolbarBackground(DemoTheme.void, for: .navigationBar)
-        .toolbarBackground(.visible, for: .navigationBar)
-        .toolbarColorScheme(.dark, for: .navigationBar)
-        #endif
+        .demoRoomChrome()
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 WorkbenchOptionsMenu(showCheatSheet: $showCheatSheet, accent: track.accent)
@@ -76,7 +76,7 @@ struct WorkbenchView: View {
             }
             Button("Cancel", role: .cancel) {}
         } message: {
-            Text(deadlockMessage)
+            Text(track.playgroundDeadlockMessage)
         }
         .sheet(isPresented: $showCheatSheet) {
             CheatSheetView(track: track)
@@ -90,20 +90,13 @@ struct WorkbenchView: View {
             selected.run(log)
         }
     }
-
-    private var deadlockMessage: String {
-        switch track {
-        case .gcd:
-            return "main.sync from the main thread never returns. Stop the run in Xcode or force-quit."
-        case .modern:
-            return "Parking the main thread while waiting for MainActor work never returns. Stop the run in Xcode or force-quit."
-        }
-    }
 }
 
 private struct PhoneWorkbenchLayout: View {
     let trackTitle: String
     let appleLabel: String
+    let appleChip: String
+    let accent: Color
     let scenarios: [DemoScenario]
     let selected: DemoScenario
     let selectedID: String
@@ -116,16 +109,18 @@ private struct PhoneWorkbenchLayout: View {
     var body: some View {
         ZStack(alignment: .bottom) {
             VStack(alignment: .leading, spacing: 0) {
-                WorkbenchHeader(trackTitle: trackTitle)
+                WorkbenchHeader(trackTitle: trackTitle, accent: accent)
                 LessonStrip(
                     scenarios: scenarios,
                     selectedID: selectedID,
+                    accent: accent,
                     onSelect: onSelect
                 )
                 ScrollView {
                     LessonBody(
                         scenario: selected,
                         appleLabel: appleLabel,
+                        appleChip: appleChip,
                         showAppleAPI: $showAppleAPI,
                         onRun: onRun
                     )
@@ -144,6 +139,8 @@ private struct PhoneWorkbenchLayout: View {
 private struct PadWorkbenchLayout: View {
     let trackTitle: String
     let appleLabel: String
+    let appleChip: String
+    let accent: Color
     let scenarios: [DemoScenario]
     let selected: DemoScenario
     let selectedID: String
@@ -162,11 +159,13 @@ private struct PadWorkbenchLayout: View {
         VStack(alignment: .leading, spacing: 0) {
             WorkbenchHeader(
                 trackTitle: trackTitle,
+                accent: accent,
                 showsBlurb: !compactVertical
             )
             LessonStrip(
                 scenarios: scenarios,
                 selectedID: selectedID,
+                accent: accent,
                 onSelect: onSelect,
                 compact: compactVertical
             )
@@ -182,6 +181,7 @@ private struct PadWorkbenchLayout: View {
                     teachingSnippet: selected.teachingSnippet,
                     appleSnippet: selected.appleSnippet,
                     appleLabel: appleLabel,
+                    appleChip: appleChip,
                     showAppleAPI: $showAppleAPI,
                     fillsAvailableHeight: true
                 )
@@ -226,13 +226,14 @@ private struct PadLessonIntro: View {
 
 private struct WorkbenchHeader: View {
     let trackTitle: String
+    let accent: Color
     var showsBlurb: Bool = true
 
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
             Text(trackTitle)
                 .font(.system(size: DemoLayout.typeSize(28), weight: .regular, design: .serif))
-                .foregroundStyle(DemoTheme.phosphor)
+                .foregroundStyle(accent)
             if showsBlurb {
                 Text("Workbench. Amber is the main thread; cyan is everything else. Xcode prints the same lines.")
                     .font(.system(size: DemoLayout.typeSize(13), design: .serif))
@@ -249,6 +250,7 @@ private struct WorkbenchHeader: View {
 private struct LessonStrip: View {
     let scenarios: [DemoScenario]
     let selectedID: String
+    let accent: Color
     let onSelect: (String) -> Void
     var compact: Bool = false
 
@@ -261,12 +263,12 @@ private struct LessonStrip: View {
                     } label: {
                         Text(scenario.title)
                             .font(.system(size: DemoLayout.typeSize(12), design: .monospaced))
-                            .foregroundStyle(selectedID == scenario.id ? DemoTheme.void : DemoTheme.phosphor)
+                            .foregroundStyle(selectedID == scenario.id ? DemoTheme.void : accent)
                             .padding(.horizontal, 10)
                             .padding(.vertical, 7)
                             .background(
                                 Capsule(style: .continuous)
-                                    .fill(selectedID == scenario.id ? DemoTheme.phosphor : Color.white.opacity(0.06))
+                                    .fill(selectedID == scenario.id ? accent : Color.white.opacity(0.06))
                             )
                             .overlay(
                                 Capsule(style: .continuous)
@@ -327,6 +329,7 @@ private struct RunLessonButton: View {
 private struct LessonBody: View {
     let scenario: DemoScenario
     let appleLabel: String
+    let appleChip: String
     @Binding var showAppleAPI: Bool
     let onRun: () -> Void
 
@@ -337,6 +340,7 @@ private struct LessonBody: View {
                 teachingSnippet: scenario.teachingSnippet,
                 appleSnippet: scenario.appleSnippet,
                 appleLabel: appleLabel,
+                appleChip: appleChip,
                 showAppleAPI: $showAppleAPI
             )
             RunLessonButton(isDestructive: scenario.isDestructive, action: onRun)

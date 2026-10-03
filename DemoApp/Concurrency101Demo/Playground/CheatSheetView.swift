@@ -1,10 +1,17 @@
 import SwiftUI
 
-struct CheatSheetRow: Identifiable {
+struct CheatSheetRow: Identifiable, Hashable {
     let id: String
     let intent: String
     let teaching: String
     let apple: String
+}
+
+struct CheatSheetTrap: Identifiable, Hashable {
+    var id: String { said }
+    let said: String
+    let typed: String
+    let meant: String
 }
 
 enum GCDCheatSheet {
@@ -26,12 +33,28 @@ enum GCDCheatSheet {
         .init(id: "wait", intent: "Block for a group (avoid)", teaching: "GCD.Blocking.blockThisThreadUntilAllJobsEnd", apple: "group.wait"),
     ]
 
-    static let traps: [(said: String, typed: String, meant: String)] = [
-        ("“Do it in the background”", ".background", "runUserRequestedWork (.userInitiated)"),
-        ("“Async this”", "async", "do not wait — not magic parallelism"),
-        ("“Sync so it is safe”", "queue.sync from main", "serial lane / actor, not blocking"),
-        ("“Concurrent so it is faster”", "concurrent + shared var", "data race unless isolated"),
+    static let traps: [CheatSheetTrap] = [
+        CheatSheetTrap(said: "“Do it in the background”", typed: ".background", meant: "runUserRequestedWork (.userInitiated)"),
+        CheatSheetTrap(said: "“Async this”", typed: "async", meant: "do not wait — not magic parallelism"),
+        CheatSheetTrap(said: "“Sync so it is safe”", typed: "queue.sync from main", meant: "serial lane / actor, not blocking"),
+        CheatSheetTrap(said: "“Concurrent so it is faster”", typed: "concurrent + shared var", meant: "data race unless isolated"),
     ]
+}
+
+enum CheatSheetCatalog {
+    static func mappings(for track: LearningTrack) -> [CheatSheetRow] {
+        switch track {
+        case .gcd: return GCDCheatSheet.mappings
+        case .modern: return ModernCheatSheet.mappings
+        }
+    }
+
+    static func traps(for track: LearningTrack) -> [CheatSheetTrap] {
+        switch track {
+        case .gcd: return GCDCheatSheet.traps
+        case .modern: return ModernCheatSheet.traps
+        }
+    }
 }
 
 enum ModernCheatSheet {
@@ -54,12 +77,12 @@ enum ModernCheatSheet {
         .init(id: "park", intent: "Block this thread (avoid)", teaching: "Modern.Blocking.parkThisThreadUntilTaskFinishes", apple: "semaphore.wait around a Task"),
     ]
 
-    static let traps: [(said: String, typed: String, meant: String)] = [
-        ("“Do it in the background”", "TaskPriority.background", "runUserRequestedWork (.userInitiated)"),
-        ("“Task { } from a button”", "inherits @MainActor", "runDetachedFromCaller if work must leave UI"),
-        ("“Await is like sync”", "await", "suspends the task; does not park the thread"),
-        ("“Actors can't race”", "await inside the actor", "reentrancy: other callers run at every await"),
-        ("“Cancel stops it”", "task.cancel()", "cooperative — sleep checks; CPU loops do not"),
+    static let traps: [CheatSheetTrap] = [
+        CheatSheetTrap(said: "“Do it in the background”", typed: "TaskPriority.background", meant: "runUserRequestedWork (.userInitiated)"),
+        CheatSheetTrap(said: "“Task { } from a button”", typed: "inherits @MainActor", meant: "runDetachedFromCaller if work must leave UI"),
+        CheatSheetTrap(said: "“Await is like sync”", typed: "await", meant: "suspends the task; does not park the thread"),
+        CheatSheetTrap(said: "“Actors can't race”", typed: "await inside the actor", meant: "reentrancy: other callers run at every await"),
+        CheatSheetTrap(said: "“Cancel stops it”", typed: "task.cancel()", meant: "cooperative — sleep checks; CPU loops do not"),
     ]
 }
 
@@ -68,11 +91,11 @@ struct CheatSheetView: View {
     @Environment(\.dismiss) private var dismiss
 
     private var mappings: [CheatSheetRow] {
-        track == .gcd ? GCDCheatSheet.mappings : ModernCheatSheet.mappings
+        CheatSheetCatalog.mappings(for: track)
     }
 
-    private var traps: [(said: String, typed: String, meant: String)] {
-        track == .gcd ? GCDCheatSheet.traps : ModernCheatSheet.traps
+    private var traps: [CheatSheetTrap] {
+        CheatSheetCatalog.traps(for: track)
     }
 
     var body: some View {
@@ -90,12 +113,8 @@ struct CheatSheetView: View {
                 .padding(.bottom, 24)
             }
             .background(DemoTheme.void.ignoresSafeArea())
-            .navigationTitle(track == .gcd ? "GCD cheat sheet" : "Swift cheat sheet")
-            #if os(iOS)
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbarBackground(DemoTheme.void, for: .navigationBar)
-            .toolbarBackground(.visible, for: .navigationBar)
-            #endif
+            .navigationTitle(track.cheatSheetTitle)
+            .demoRoomChrome()
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Close") { dismiss() }
@@ -137,14 +156,14 @@ private struct CheatSheetMappingList: View {
 }
 
 private struct CheatSheetTrapList: View {
-    let traps: [(said: String, typed: String, meant: String)]
+    let traps: [CheatSheetTrap]
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             Text("Everyday traps")
                 .font(.system(size: DemoLayout.typeSize(18), design: .serif))
                 .foregroundStyle(DemoTheme.phosphor)
-            ForEach(Array(traps.enumerated()), id: \.offset) { _, trap in
+            ForEach(traps) { trap in
                 VStack(alignment: .leading, spacing: 4) {
                     Text(trap.said)
                         .font(.system(size: DemoLayout.typeSize(14), design: .serif))

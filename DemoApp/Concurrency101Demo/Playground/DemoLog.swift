@@ -20,7 +20,7 @@ final class DemoLog: ObservableObject {
 
     @Published private(set) var entries: [Entry] = []
 
-    private let lock = NSLock()
+    private static let overlayCap = 400
 
     /// Writes one line to Xcode and to the transparent console.
     func log(_ text: String) {
@@ -33,8 +33,9 @@ final class DemoLog: ObservableObject {
         print(entry.consoleLine)
         DispatchQueue.main.async {
             self.entries.append(entry)
-            if self.entries.count > 400 {
-                self.entries.removeFirst(self.entries.count - 400)
+            let overflow = self.entries.count - Self.overlayCap
+            if overflow > 0 {
+                self.entries.removeFirst(overflow)
             }
         }
     }
