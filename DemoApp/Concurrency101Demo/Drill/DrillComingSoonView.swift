@@ -4,8 +4,7 @@ struct DrillComingSoonView: View {
     let track: LearningTrack
 
     var body: some View {
-        ZStack {
-            DemoTheme.void.ignoresSafeArea()
+        DemoCanvas {
             ScrollView {
                 VStack(alignment: .leading, spacing: 22) {
                     DrillGlyph(accent: track.accent)
@@ -33,13 +32,7 @@ struct DrillComingSoonView: View {
             }
         }
         .navigationTitle("Drill")
-        #if os(iOS)
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbar(.visible, for: .navigationBar)
-        .toolbarBackground(DemoTheme.void, for: .navigationBar)
-        .toolbarBackground(.visible, for: .navigationBar)
-        .toolbarColorScheme(.dark, for: .navigationBar)
-        #endif
+        .demoRoomChrome()
     }
 }
 
