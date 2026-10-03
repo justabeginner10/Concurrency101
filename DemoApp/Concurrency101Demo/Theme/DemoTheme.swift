@@ -5,6 +5,7 @@ enum DemoTheme {
     static let phosphor = Color(red: 0.91, green: 0.72, blue: 0.43)
     static let cyan = Color(red: 0.49, green: 0.72, blue: 0.79)
     static let freeze = Color(red: 0.77, green: 0.36, blue: 0.36)
+    static let hit = Color(red: 0.42, green: 0.78, blue: 0.50)
     static let muted = Color.white.opacity(0.45)
 
     static let syntaxBrand = phosphor
