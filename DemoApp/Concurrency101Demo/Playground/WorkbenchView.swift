@@ -3,7 +3,7 @@ import SwiftUI
 struct WorkbenchView: View {
     let track: LearningTrack
 
-    @StateObject private var log = DemoLog()
+    @State private var log = DemoLog()
     @State private var selectedID = ""
     @State private var consoleExpanded = false
     @State private var confirmDeadlock = false
@@ -133,7 +133,7 @@ private struct PhoneWorkbenchLayout: View {
     let scenarios: [DemoScenario]
     let selected: DemoScenario
     let selectedID: String
-    @ObservedObject var log: DemoLog
+    let log: DemoLog
     @Binding var consoleExpanded: Bool
     @Binding var showAppleAPI: Bool
     let onSelect: (String) -> Void
@@ -185,7 +185,7 @@ private struct PadWorkbenchLayout: View {
     let scenarios: [DemoScenario]
     let selected: DemoScenario
     let selectedID: String
-    @ObservedObject var log: DemoLog
+    let log: DemoLog
     @Binding var showAppleAPI: Bool
     let onSelect: (String) -> Void
     let onRun: () -> Void
@@ -341,7 +341,7 @@ private struct LessonStrip: View {
     var bottomPadding: CGFloat = 16
 
     var body: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
+        ScrollView(.horizontal) {
             HStack(spacing: 8) {
                 ForEach(scenarios) { scenario in
                     Button {
@@ -352,23 +352,24 @@ private struct LessonStrip: View {
                             .foregroundStyle(selectedID == scenario.id ? DemoTheme.void : accent)
                             .padding(.horizontal, 10)
                             .padding(.vertical, 7)
-                            .background(
+                            .background {
                                 Capsule(style: .continuous)
                                     .fill(selectedID == scenario.id ? accent : Color.white.opacity(0.06))
-                            )
-                            .overlay(
+                            }
+                            .overlay {
                                 Capsule(style: .continuous)
                                     .strokeBorder(
                                         scenario.isDestructive ? DemoTheme.freeze.opacity(0.8) : Color.clear,
                                         lineWidth: 1
                                     )
-                            )
+                            }
                     }
                     .buttonStyle(.plain)
                 }
             }
             .padding(.horizontal, horizontalPadding)
         }
+        .scrollIndicators(.hidden)
         .fixedSize(horizontal: false, vertical: true)
         .padding(.bottom, bottomPadding)
     }
@@ -454,7 +455,7 @@ private struct WorkbenchMaximizeOverlay: View {
     let appleLabel: String
     let appleChip: String
     @Binding var showAppleAPI: Bool
-    @ObservedObject var log: DemoLog
+    let log: DemoLog
     @Binding var consoleExpanded: Bool
     let onMinimize: () -> Void
 

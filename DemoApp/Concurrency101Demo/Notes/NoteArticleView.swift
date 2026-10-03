@@ -167,7 +167,7 @@ private struct NoteCodeBlock<Label: View>: View {
                         .padding(.vertical, 8)
                     Divider().overlay(accent.opacity(0.22))
                 }
-                ScrollView(.horizontal, showsIndicators: false) {
+                ScrollView(.horizontal) {
                     label
                         .fixedSize(horizontal: false, vertical: true)
                         .relativeLineSpacing(.em(0.2))
@@ -178,12 +178,13 @@ private struct NoteCodeBlock<Label: View>: View {
                         }
                         .padding(12)
                 }
+                .scrollIndicators(.hidden)
             }
             .background(Color.white.opacity(0.05))
-            .overlay(
+            .overlay {
                 RoundedRectangle(cornerRadius: 4, style: .continuous)
                     .strokeBorder(accent.opacity(0.22), lineWidth: 0.5)
-            )
+            }
             .clipShape(RoundedRectangle(cornerRadius: 4, style: .continuous))
         }
     }
@@ -211,9 +212,9 @@ private struct MermaidFigure: View {
                 .fill(accent)
                 .frame(width: 2)
         }
-        .overlay(
+        .overlay {
             Rectangle()
                 .strokeBorder(accent.opacity(0.22), lineWidth: 0.5)
-        )
+        }
     }
 }

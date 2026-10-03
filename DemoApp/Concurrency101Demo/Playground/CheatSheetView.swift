@@ -112,7 +112,7 @@ struct CheatSheetView: View {
                 .padding(16)
                 .padding(.bottom, 24)
             }
-            .background(DemoTheme.void.ignoresSafeArea())
+            .background { DemoTheme.void.ignoresSafeArea() }
             .navigationTitle(track.cheatSheetTitle)
             .demoRoomChrome()
             .toolbar {
