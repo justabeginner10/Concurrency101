@@ -32,7 +32,7 @@ struct DrillView: View {
         .navigationPopGestureDisabled(quizIsRunning)
         .toolbar {
             if quizIsRunning {
-                ToolbarItem(placement: .topBarLeading) {
+                ToolbarItem(placement: Self.backButtonPlacement) {
                     Button {
                         confirmLeave = true
                     } label: {
@@ -50,6 +50,15 @@ struct DrillView: View {
             Button("Yes") { dismiss() }
             Button("No", role: .cancel) {}
         }
+    }
+
+    /// `.topBarLeading` is iOS-only; `.navigation` is the leading slot on macOS.
+    private static var backButtonPlacement: ToolbarItemPlacement {
+        #if os(iOS)
+        .topBarLeading
+        #else
+        .navigation
+        #endif
     }
 
     private var title: String {

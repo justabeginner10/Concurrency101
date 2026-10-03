@@ -255,11 +255,13 @@ private struct DrillExplainPresentation: ViewModifier {
                         maxHeight: 640
                     )
                     .presentationBackground(DemoTheme.void)
+                    #if os(iOS)
                     .background {
                         HidePopoverArrow()
                             .frame(width: 0, height: 0)
                             .accessibilityHidden(true)
                     }
+                    #endif
             }
         } else {
             content.sheet(isPresented: $isPresented) {
