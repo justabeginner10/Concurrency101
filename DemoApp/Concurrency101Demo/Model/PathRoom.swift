@@ -20,7 +20,7 @@ enum PathRoom: String, Hashable, Identifiable, CaseIterable {
         case .notes:
             return "The Obsidian curriculum for this path, \(noteCount) notes, with a sidebar to move between them."
         case .drill:
-            return "Closed-book quizzes for this path. The quiz flow is next; playground and notes are ready now."
+            return "Closed-book quiz for this path. Pick a difficulty, eight questions, immediate correct or wrong."
         }
     }
 
@@ -28,11 +28,11 @@ enum PathRoom: String, Hashable, Identifiable, CaseIterable {
         switch self {
         case .playground: return "Open Playground"
         case .notes: return "Open Notes"
-        case .drill: return "Coming next"
+        case .drill: return "Open Drill"
         }
     }
 
     var ctaOpacity: Double {
-        self == .drill ? 0.55 : 1
+        1
     }
 }

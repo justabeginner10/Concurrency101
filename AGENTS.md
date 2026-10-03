@@ -58,7 +58,7 @@ Project: `DemoApp/Concurrency101Demo.xcodeproj`. Target sources: `DemoApp/Concur
 - `Landing/` — track doors (`LandingView`) and the hub (`TrackHubView`)
 - `Playground/` — workbench, cheat sheet, console, log, and scenarios. `DemoScenario` is `Playground/DemoScenario.swift`. Per-track lists are `Playground/Scenarios/`.
 - `Notes/` — studio, article, and session. The loader for curriculum markdown is `Notes/Curriculum/` (`CurriculumCatalog`, `CurriculumBundle`, `NoteMarkdown`).
-- `Drill/` — `DrillComingSoonView.swift`
+- `Drill/` — lobby, question, explain, results, session, and GCD/Swift question banks. `DrillView.swift` is the room.
 
 Landing picks a track, then the hub opens a `PathRoom`. Lesson copy stays in `Curriculum/`; `Notes/Curriculum/` is only the reader.
 
