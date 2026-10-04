@@ -145,7 +145,7 @@ private struct PhoneWorkbenchLayout: View {
         ZStack(alignment: .bottom) {
             VStack(alignment: .leading, spacing: 0) {
                 WorkbenchHeader(trackTitle: trackTitle, accent: accent)
-                PhonePlaygroundChrome(
+                PlaygroundLessonChrome(
                     scenarios: scenarios,
                     selectedID: selectedID,
                     selectedTitle: selected.title,
@@ -207,31 +207,22 @@ private struct PadWorkbenchLayout: View {
                 accent: accent,
                 showsBlurb: !compactVertical
             )
-            if compactVertical {
-                CompactPlaygroundChrome(
-                    scenarios: scenarios,
-                    selectedID: selectedID,
-                    accent: accent,
-                    appleAPI: selected.appleAPI,
-                    blurb: selected.blurb,
-                    isDestructive: selected.isDestructive,
-                    onSelect: onSelect,
-                    onRun: onRun
-                )
-            } else {
-                LessonStrip(
-                    scenarios: scenarios,
-                    selectedID: selectedID,
-                    accent: accent,
-                    onSelect: onSelect
-                )
-                PadLessonIntro(
-                    appleAPI: selected.appleAPI,
-                    blurb: selected.blurb,
-                    isDestructive: selected.isDestructive,
-                    onRun: onRun
-                )
-            }
+            PlaygroundLessonChrome(
+                scenarios: scenarios,
+                selectedID: selectedID,
+                selectedTitle: selected.title,
+                accent: accent,
+                isDestructive: selected.isDestructive,
+                onSelect: onSelect,
+                onRun: onRun
+            )
+            LessonCopy(
+                appleAPI: selected.appleAPI,
+                blurb: selected.blurb,
+                compact: compactVertical
+            )
+            .padding(.horizontal, 16)
+            .padding(.bottom, compactVertical ? 8 : 12)
             HStack(alignment: .top, spacing: 12) {
                 CodeSnippetView(
                     teachingSnippet: selected.teachingSnippet,
@@ -258,7 +249,7 @@ private struct PadWorkbenchLayout: View {
     }
 }
 
-private struct PhonePlaygroundChrome: View {
+private struct PlaygroundLessonChrome: View {
     let scenarios: [DemoScenario]
     let selectedID: String
     let selectedTitle: String
@@ -342,59 +333,6 @@ private struct LessonPickerMenu: View {
     }
 }
 
-private struct CompactPlaygroundChrome: View {
-    let scenarios: [DemoScenario]
-    let selectedID: String
-    let accent: Color
-    let appleAPI: String
-    let blurb: String
-    let isDestructive: Bool
-    let onSelect: (String) -> Void
-    let onRun: () -> Void
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            HStack(alignment: .center, spacing: 10) {
-                LessonStrip(
-                    scenarios: scenarios,
-                    selectedID: selectedID,
-                    accent: accent,
-                    onSelect: onSelect,
-                    horizontalPadding: 0,
-                    bottomPadding: 0
-                )
-                .frame(minWidth: 0, maxWidth: .infinity)
-
-                RunLessonButton(
-                    isDestructive: isDestructive,
-                    fillsWidth: false,
-                    action: onRun
-                )
-            }
-            LessonCopy(appleAPI: appleAPI, blurb: blurb, compact: true)
-        }
-        .padding(.horizontal, 16)
-        .padding(.bottom, 8)
-    }
-}
-
-private struct PadLessonIntro: View {
-    let appleAPI: String
-    let blurb: String
-    let isDestructive: Bool
-    let onRun: () -> Void
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            LessonCopy(appleAPI: appleAPI, blurb: blurb)
-                .padding(.horizontal, 16)
-            RunLessonButton(isDestructive: isDestructive, action: onRun)
-                .padding(.horizontal, 16)
-                .padding(.bottom, 12)
-        }
-    }
-}
-
 private struct WorkbenchHeader: View {
     let trackTitle: String
     let accent: Color
@@ -415,49 +353,6 @@ private struct WorkbenchHeader: View {
         .padding(.horizontal, 16)
         .padding(.top, showsBlurb ? 8 : 4)
         .padding(.bottom, showsBlurb ? 12 : 8)
-    }
-}
-
-private struct LessonStrip: View {
-    let scenarios: [DemoScenario]
-    let selectedID: String
-    let accent: Color
-    let onSelect: (String) -> Void
-    var horizontalPadding: CGFloat = 16
-    var bottomPadding: CGFloat = 16
-
-    var body: some View {
-        ScrollView(.horizontal) {
-            HStack(spacing: 8) {
-                ForEach(scenarios) { scenario in
-                    Button {
-                        onSelect(scenario.id)
-                    } label: {
-                        Text(scenario.title)
-                            .font(.system(size: DemoLayout.typeSize(12), design: .monospaced))
-                            .foregroundStyle(selectedID == scenario.id ? DemoTheme.void : accent)
-                            .padding(.horizontal, 10)
-                            .padding(.vertical, 7)
-                            .background {
-                                Capsule(style: .continuous)
-                                    .fill(selectedID == scenario.id ? accent : Color.white.opacity(0.06))
-                            }
-                            .overlay {
-                                Capsule(style: .continuous)
-                                    .strokeBorder(
-                                        scenario.isDestructive ? DemoTheme.freeze.opacity(0.8) : Color.clear,
-                                        lineWidth: 1
-                                    )
-                            }
-                    }
-                    .buttonStyle(.plain)
-                }
-            }
-            .padding(.horizontal, horizontalPadding)
-        }
-        .scrollIndicators(.hidden)
-        .fixedSize(horizontal: false, vertical: true)
-        .padding(.bottom, bottomPadding)
     }
 }
 
