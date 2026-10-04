@@ -272,6 +272,7 @@ private struct PlaygroundLessonChrome: View {
             RunLessonButton(
                 isDestructive: isDestructive,
                 fillsWidth: false,
+                minWidth: DemoLayout.isPadLike ? 168 : 0,
                 action: onRun
             )
         }
@@ -380,6 +381,7 @@ private struct LessonCopy: View {
 private struct RunLessonButton: View {
     let isDestructive: Bool
     var fillsWidth: Bool = true
+    var minWidth: CGFloat = 0
     let action: () -> Void
 
     var body: some View {
@@ -388,7 +390,7 @@ private struct RunLessonButton: View {
                 .font(.system(size: DemoLayout.typeSize(15), weight: .medium, design: .serif))
                 .padding(.horizontal, fillsWidth ? 16 : 14)
                 .padding(.vertical, fillsWidth ? 12 : 8)
-                .frame(maxWidth: fillsWidth ? .infinity : nil)
+                .frame(minWidth: fillsWidth ? 0 : minWidth, maxWidth: fillsWidth ? .infinity : nil)
                 .background(isDestructive ? DemoTheme.freeze : DemoTheme.phosphor)
                 .foregroundStyle(DemoTheme.void)
         }
