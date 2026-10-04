@@ -145,11 +145,14 @@ private struct PhoneWorkbenchLayout: View {
         ZStack(alignment: .bottom) {
             VStack(alignment: .leading, spacing: 0) {
                 WorkbenchHeader(trackTitle: trackTitle, accent: accent)
-                LessonStrip(
+                PlaygroundLessonChrome(
                     scenarios: scenarios,
                     selectedID: selectedID,
+                    selectedTitle: selected.title,
                     accent: accent,
-                    onSelect: onSelect
+                    isDestructive: selected.isDestructive,
+                    onSelect: onSelect,
+                    onRun: onRun
                 )
                 ScrollView {
                     LessonBody(
@@ -157,7 +160,6 @@ private struct PhoneWorkbenchLayout: View {
                         appleLabel: appleLabel,
                         appleChip: appleChip,
                         showAppleAPI: $showAppleAPI,
-                        onRun: onRun,
                         onMaximizeCode: onMaximizeCode
                     )
                 }
@@ -205,31 +207,22 @@ private struct PadWorkbenchLayout: View {
                 accent: accent,
                 showsBlurb: !compactVertical
             )
-            if compactVertical {
-                CompactPlaygroundChrome(
-                    scenarios: scenarios,
-                    selectedID: selectedID,
-                    accent: accent,
-                    appleAPI: selected.appleAPI,
-                    blurb: selected.blurb,
-                    isDestructive: selected.isDestructive,
-                    onSelect: onSelect,
-                    onRun: onRun
-                )
-            } else {
-                LessonStrip(
-                    scenarios: scenarios,
-                    selectedID: selectedID,
-                    accent: accent,
-                    onSelect: onSelect
-                )
-                PadLessonIntro(
-                    appleAPI: selected.appleAPI,
-                    blurb: selected.blurb,
-                    isDestructive: selected.isDestructive,
-                    onRun: onRun
-                )
-            }
+            PlaygroundLessonChrome(
+                scenarios: scenarios,
+                selectedID: selectedID,
+                selectedTitle: selected.title,
+                accent: accent,
+                isDestructive: selected.isDestructive,
+                onSelect: onSelect,
+                onRun: onRun
+            )
+            LessonCopy(
+                appleAPI: selected.appleAPI,
+                blurb: selected.blurb,
+                compact: compactVertical
+            )
+            .padding(.horizontal, 16)
+            .padding(.bottom, compactVertical ? 8 : 12)
             HStack(alignment: .top, spacing: 12) {
                 CodeSnippetView(
                     teachingSnippet: selected.teachingSnippet,
@@ -256,56 +249,88 @@ private struct PadWorkbenchLayout: View {
     }
 }
 
-private struct CompactPlaygroundChrome: View {
+private struct PlaygroundLessonChrome: View {
     let scenarios: [DemoScenario]
     let selectedID: String
+    let selectedTitle: String
     let accent: Color
-    let appleAPI: String
-    let blurb: String
     let isDestructive: Bool
     let onSelect: (String) -> Void
     let onRun: () -> Void
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            HStack(alignment: .center, spacing: 10) {
-                LessonStrip(
-                    scenarios: scenarios,
-                    selectedID: selectedID,
-                    accent: accent,
-                    onSelect: onSelect,
-                    horizontalPadding: 0,
-                    bottomPadding: 0
-                )
-                .frame(minWidth: 0, maxWidth: .infinity)
-
-                RunLessonButton(
-                    isDestructive: isDestructive,
-                    fillsWidth: false,
-                    action: onRun
-                )
-            }
-            LessonCopy(appleAPI: appleAPI, blurb: blurb, compact: true)
+        HStack(alignment: .center, spacing: 10) {
+            LessonPickerMenu(
+                scenarios: scenarios,
+                selectedID: selectedID,
+                selectedTitle: selectedTitle,
+                accent: accent,
+                isDestructive: isDestructive,
+                onSelect: onSelect
+            )
+            .frame(minWidth: 0, maxWidth: .infinity)
+            RunLessonButton(
+                isDestructive: isDestructive,
+                fillsWidth: false,
+                minWidth: DemoLayout.isPadLike ? 168 : 0,
+                action: onRun
+            )
         }
         .padding(.horizontal, 16)
-        .padding(.bottom, 8)
+        .padding(.bottom, 12)
     }
 }
 
-private struct PadLessonIntro: View {
-    let appleAPI: String
-    let blurb: String
+private struct LessonPickerMenu: View {
+    let scenarios: [DemoScenario]
+    let selectedID: String
+    let selectedTitle: String
+    let accent: Color
     let isDestructive: Bool
-    let onRun: () -> Void
+    let onSelect: (String) -> Void
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            LessonCopy(appleAPI: appleAPI, blurb: blurb)
-                .padding(.horizontal, 16)
-            RunLessonButton(isDestructive: isDestructive, action: onRun)
-                .padding(.horizontal, 16)
-                .padding(.bottom, 12)
+        Menu {
+            Picker("Lesson", selection: Binding(
+                get: { selectedID },
+                set: onSelect
+            )) {
+                ForEach(scenarios) { scenario in
+                    Text(scenario.title).tag(scenario.id)
+                }
+            }
+        } label: {
+            HStack(spacing: 8) {
+                Text(selectedTitle)
+                    .font(.system(size: DemoLayout.typeSize(12), design: .monospaced))
+                    .lineLimit(1)
+                Spacer(minLength: 4)
+                Image(systemName: "chevron.down")
+                    .font(.system(size: 10, weight: .semibold))
+            }
+            .foregroundStyle(accent)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
+            .frame(maxWidth: .infinity, minHeight: 36, alignment: .leading)
+            .background(
+                RoundedRectangle(cornerRadius: 4, style: .continuous)
+                    .fill(Color.white.opacity(0.06))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 4, style: .continuous)
+                    .strokeBorder(
+                        isDestructive ? DemoTheme.freeze.opacity(0.8) : Color.clear,
+                        lineWidth: 1
+                    )
+            )
+            .contentShape(RoundedRectangle(cornerRadius: 4, style: .continuous))
         }
+        .buttonStyle(.plain)
+        .menuIndicator(.hidden)
+        .menuOrder(.fixed)
+        .frame(maxWidth: .infinity)
+        .accessibilityLabel("Lesson")
+        .accessibilityValue(selectedTitle)
     }
 }
 
@@ -329,49 +354,6 @@ private struct WorkbenchHeader: View {
         .padding(.horizontal, 16)
         .padding(.top, showsBlurb ? 8 : 4)
         .padding(.bottom, showsBlurb ? 12 : 8)
-    }
-}
-
-private struct LessonStrip: View {
-    let scenarios: [DemoScenario]
-    let selectedID: String
-    let accent: Color
-    let onSelect: (String) -> Void
-    var horizontalPadding: CGFloat = 16
-    var bottomPadding: CGFloat = 16
-
-    var body: some View {
-        ScrollView(.horizontal) {
-            HStack(spacing: 8) {
-                ForEach(scenarios) { scenario in
-                    Button {
-                        onSelect(scenario.id)
-                    } label: {
-                        Text(scenario.title)
-                            .font(.system(size: DemoLayout.typeSize(12), design: .monospaced))
-                            .foregroundStyle(selectedID == scenario.id ? DemoTheme.void : accent)
-                            .padding(.horizontal, 10)
-                            .padding(.vertical, 7)
-                            .background {
-                                Capsule(style: .continuous)
-                                    .fill(selectedID == scenario.id ? accent : Color.white.opacity(0.06))
-                            }
-                            .overlay {
-                                Capsule(style: .continuous)
-                                    .strokeBorder(
-                                        scenario.isDestructive ? DemoTheme.freeze.opacity(0.8) : Color.clear,
-                                        lineWidth: 1
-                                    )
-                            }
-                    }
-                    .buttonStyle(.plain)
-                }
-            }
-            .padding(.horizontal, horizontalPadding)
-        }
-        .scrollIndicators(.hidden)
-        .fixedSize(horizontal: false, vertical: true)
-        .padding(.bottom, bottomPadding)
     }
 }
 
@@ -399,6 +381,7 @@ private struct LessonCopy: View {
 private struct RunLessonButton: View {
     let isDestructive: Bool
     var fillsWidth: Bool = true
+    var minWidth: CGFloat = 0
     let action: () -> Void
 
     var body: some View {
@@ -407,7 +390,7 @@ private struct RunLessonButton: View {
                 .font(.system(size: DemoLayout.typeSize(15), weight: .medium, design: .serif))
                 .padding(.horizontal, fillsWidth ? 16 : 14)
                 .padding(.vertical, fillsWidth ? 12 : 8)
-                .frame(maxWidth: fillsWidth ? .infinity : nil)
+                .frame(minWidth: fillsWidth ? 0 : minWidth, maxWidth: fillsWidth ? .infinity : nil)
                 .background(isDestructive ? DemoTheme.freeze : DemoTheme.phosphor)
                 .foregroundStyle(DemoTheme.void)
         }
@@ -423,7 +406,6 @@ private struct LessonBody: View {
     let appleLabel: String
     let appleChip: String
     @Binding var showAppleAPI: Bool
-    let onRun: () -> Void
     var onMaximizeCode: (() -> Void)? = nil
 
     var body: some View {
@@ -437,7 +419,6 @@ private struct LessonBody: View {
                 showAppleAPI: $showAppleAPI,
                 onToggleMaximize: onMaximizeCode
             )
-            RunLessonButton(isDestructive: scenario.isDestructive, action: onRun)
         }
         .padding(.horizontal, 16)
     }
