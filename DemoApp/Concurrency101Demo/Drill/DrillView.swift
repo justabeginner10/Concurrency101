@@ -4,11 +4,13 @@ struct DrillView: View {
     let track: LearningTrack
     @State private var session: DrillSession
     @State private var confirmLeave = false
+    @State private var noteID: String?
     @Environment(\.dismiss) private var dismiss
 
-    init(track: LearningTrack) {
+    init(track: LearningTrack, resume: Bool = false) {
         self.track = track
-        _session = State(initialValue: DrillSession(track: track))
+        let snapshot = resume ? LearningMemory.drillSnapshot(track: track) : nil
+        _session = State(initialValue: DrillSession(track: track, snapshot: snapshot))
     }
 
     private var quizIsRunning: Bool {
@@ -21,7 +23,9 @@ struct DrillView: View {
             case .lobby:
                 DrillLobbyView(session: session)
             case .running:
-                DrillQuestionView(session: session)
+                DrillQuestionView(session: session) { id in
+                    noteID = id
+                }
             case .results:
                 DrillResultsView(session: session)
             }
@@ -49,6 +53,9 @@ struct DrillView: View {
         .alert("Are you sure you want to go back?", isPresented: $confirmLeave) {
             Button("Yes") { dismiss() }
             Button("No", role: .cancel) {}
+        }
+        .navigationDestination(item: $noteID) { id in
+            NotesStudioView(track: track, initialNoteID: id)
         }
     }
 

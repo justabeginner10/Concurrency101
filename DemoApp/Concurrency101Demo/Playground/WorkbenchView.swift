@@ -4,13 +4,26 @@ struct WorkbenchView: View {
     let track: LearningTrack
 
     @State private var log = DemoLog()
-    @State private var selectedID = ""
+    @State private var selectedID: String
     @State private var consoleExpanded = false
     @State private var confirmDeadlock = false
     @State private var showCheatSheet = false
     @State private var showAppleAPI = false
     @State private var maximizedPanel: WorkbenchPanel?
+    @State private var predictionChoice: Int?
+    @State private var predictionOrder: [Int]
+    @State private var predictionRan = false
+    @State private var loggedPredictionChoice: Int?
     @Environment(\.usesPhoneChrome) private var usesPhoneChrome
+
+    init(track: LearningTrack, initialLessonID: String? = nil) {
+        self.track = track
+        let scenarios = ScenarioLibrary.scenarios(for: track)
+        let preferred = initialLessonID ?? LearningMemory.lastLessonID(track: track)
+        let start = scenarios.first { $0.id == preferred }?.id ?? scenarios.first?.id ?? ""
+        _selectedID = State(initialValue: start)
+        _predictionOrder = State(initialValue: [0, 1].shuffled())
+    }
 
     private var scenarios: [DemoScenario] {
         ScenarioLibrary.scenarios(for: track)
@@ -40,8 +53,14 @@ struct WorkbenchView: View {
                     log: log,
                     consoleExpanded: $consoleExpanded,
                     showAppleAPI: $showAppleAPI,
-                    onSelect: { selectedID = $0 },
+                    onSelect: selectLesson,
                     onRun: runSelected,
+                    canRun: canRun,
+                    prediction: selected.prediction,
+                    predictionOrder: predictionOrder,
+                    predictionChoice: predictionChoice,
+                    predictionRan: predictionRan,
+                    onPickPrediction: pickPrediction,
                     onMaximizeCode: { maximize(.code) },
                     onMaximizeConsole: { maximize(.console) }
                 )
@@ -56,8 +75,14 @@ struct WorkbenchView: View {
                     selectedID: selectedID,
                     log: log,
                     showAppleAPI: $showAppleAPI,
-                    onSelect: { selectedID = $0 },
+                    onSelect: selectLesson,
                     onRun: runSelected,
+                    canRun: canRun,
+                    prediction: selected.prediction,
+                    predictionOrder: predictionOrder,
+                    predictionChoice: predictionChoice,
+                    predictionRan: predictionRan,
+                    onPickPrediction: pickPrediction,
                     onMaximizeCode: { maximize(.code) },
                     onMaximizeConsole: { maximize(.console) }
                 )
@@ -83,6 +108,7 @@ struct WorkbenchView: View {
             if selectedID.isEmpty, let first = scenarios.first {
                 selectedID = first.id
             }
+            rememberLesson()
         }
         .navigationTitle("Playground")
         .demoRoomChrome()
@@ -93,7 +119,7 @@ struct WorkbenchView: View {
         }
         .alert("This freezes the app", isPresented: $confirmDeadlock) {
             Button("Freeze", role: .destructive) {
-                selected.run(log)
+                performRun()
             }
             Button("Cancel", role: .cancel) {}
         } message: {
@@ -104,12 +130,63 @@ struct WorkbenchView: View {
         }
     }
 
+    private var canRun: Bool {
+        selected.prediction == nil || predictionChoice != nil
+    }
+
+    private func selectLesson(_ id: String) {
+        guard id != selectedID else { return }
+        selectedID = id
+        predictionChoice = nil
+        predictionRan = false
+        loggedPredictionChoice = nil
+        predictionOrder = [0, 1].shuffled()
+        log = DemoLog()
+        rememberLesson()
+    }
+
+    private func pickPrediction(_ index: Int) {
+        guard !predictionRan else { return }
+        predictionChoice = index
+    }
+
+    private func rememberLesson() {
+        guard let match = scenarios.first(where: { $0.id == selectedID }) else { return }
+        LearningMemory.rememberLesson(track: track, id: match.id, title: match.title)
+    }
+
     private func runSelected() {
+        guard canRun else { return }
+        recordPredictionIfNeeded()
         if selected.isDestructive {
             confirmDeadlock = true
         } else {
-            selected.run(log)
+            performRun()
         }
+    }
+
+    private func performRun() {
+        predictionRan = true
+        LearningMemory.markLessonRun(track: track, id: selected.id)
+        selected.run(log)
+    }
+
+    private func recordPredictionIfNeeded() {
+        guard let prediction = selected.prediction, let predictionChoice else { return }
+        guard predictionChoice != prediction.correctIndex else { return }
+        guard loggedPredictionChoice != predictionChoice else { return }
+        loggedPredictionChoice = predictionChoice
+        LearningMemory.appendMiss(
+            track: track,
+            miss: LearningMiss(
+                id: UUID(),
+                date: Date(),
+                module: selected.title,
+                predicted: prediction.choices[predictionChoice],
+                actual: prediction.choices[prediction.correctIndex],
+                why: selected.blurb
+            )
+        )
     }
 
     private func maximize(_ panel: WorkbenchPanel) {
@@ -138,6 +215,12 @@ private struct PhoneWorkbenchLayout: View {
     @Binding var showAppleAPI: Bool
     let onSelect: (String) -> Void
     let onRun: () -> Void
+    let canRun: Bool
+    let prediction: LessonPrediction?
+    let predictionOrder: [Int]
+    let predictionChoice: Int?
+    let predictionRan: Bool
+    let onPickPrediction: (Int) -> Void
     let onMaximizeCode: () -> Void
     let onMaximizeConsole: () -> Void
 
@@ -151,6 +234,7 @@ private struct PhoneWorkbenchLayout: View {
                     selectedTitle: selected.title,
                     accent: accent,
                     isDestructive: selected.isDestructive,
+                    canRun: canRun,
                     onSelect: onSelect,
                     onRun: onRun
                 )
@@ -159,7 +243,13 @@ private struct PhoneWorkbenchLayout: View {
                         scenario: selected,
                         appleLabel: appleLabel,
                         appleChip: appleChip,
+                        accent: accent,
                         showAppleAPI: $showAppleAPI,
+                        prediction: prediction,
+                        predictionOrder: predictionOrder,
+                        predictionChoice: predictionChoice,
+                        predictionRan: predictionRan,
+                        onPickPrediction: onPickPrediction,
                         onMaximizeCode: onMaximizeCode
                     )
                 }
@@ -191,6 +281,12 @@ private struct PadWorkbenchLayout: View {
     @Binding var showAppleAPI: Bool
     let onSelect: (String) -> Void
     let onRun: () -> Void
+    let canRun: Bool
+    let prediction: LessonPrediction?
+    let predictionOrder: [Int]
+    let predictionChoice: Int?
+    let predictionRan: Bool
+    let onPickPrediction: (Int) -> Void
     let onMaximizeCode: () -> Void
     let onMaximizeConsole: () -> Void
     @State private var consoleExpanded = true
@@ -213,6 +309,7 @@ private struct PadWorkbenchLayout: View {
                 selectedTitle: selected.title,
                 accent: accent,
                 isDestructive: selected.isDestructive,
+                canRun: canRun,
                 onSelect: onSelect,
                 onRun: onRun
             )
@@ -222,7 +319,19 @@ private struct PadWorkbenchLayout: View {
                 compact: compactVertical
             )
             .padding(.horizontal, 16)
-            .padding(.bottom, compactVertical ? 8 : 12)
+            .padding(.bottom, compactVertical ? 4 : 8)
+            if let prediction {
+                LessonPredictionBox(
+                    prediction: prediction,
+                    order: predictionOrder,
+                    choice: predictionChoice,
+                    ran: predictionRan,
+                    accent: accent,
+                    onPick: onPickPrediction
+                )
+                .padding(.horizontal, 16)
+                .padding(.bottom, compactVertical ? 8 : 12)
+            }
             HStack(alignment: .top, spacing: 12) {
                 CodeSnippetView(
                     teachingSnippet: selected.teachingSnippet,
@@ -255,6 +364,7 @@ private struct PlaygroundLessonChrome: View {
     let selectedTitle: String
     let accent: Color
     let isDestructive: Bool
+    let canRun: Bool
     let onSelect: (String) -> Void
     let onRun: () -> Void
 
@@ -271,6 +381,7 @@ private struct PlaygroundLessonChrome: View {
             .frame(minWidth: 0, maxWidth: .infinity)
             RunLessonButton(
                 isDestructive: isDestructive,
+                isEnabled: canRun,
                 fillsWidth: false,
                 minWidth: DemoLayout.isPadLike ? 168 : 0,
                 action: onRun
@@ -380,6 +491,7 @@ private struct LessonCopy: View {
 
 private struct RunLessonButton: View {
     let isDestructive: Bool
+    var isEnabled: Bool = true
     var fillsWidth: Bool = true
     var minWidth: CGFloat = 0
     let action: () -> Void
@@ -391,13 +503,20 @@ private struct RunLessonButton: View {
                 .padding(.horizontal, fillsWidth ? 16 : 14)
                 .padding(.vertical, fillsWidth ? 12 : 8)
                 .frame(minWidth: fillsWidth ? 0 : minWidth, maxWidth: fillsWidth ? .infinity : nil)
-                .background(isDestructive ? DemoTheme.freeze : DemoTheme.phosphor)
-                .foregroundStyle(DemoTheme.void)
+                .background(fill)
+                .foregroundStyle(isEnabled ? DemoTheme.void : DemoTheme.muted)
         }
         .buttonStyle(.plain)
         .clipShape(RoundedRectangle(cornerRadius: 4, style: .continuous))
         .fixedSize(horizontal: !fillsWidth, vertical: true)
         .layoutPriority(fillsWidth ? 0 : 1)
+        .disabled(!isEnabled)
+        .accessibilityHint(isEnabled ? "Runs the lesson" : "Choose a prediction first")
+    }
+
+    private var fill: Color {
+        guard isEnabled else { return Color.white.opacity(0.08) }
+        return isDestructive ? DemoTheme.freeze : DemoTheme.phosphor
     }
 }
 
@@ -405,12 +524,28 @@ private struct LessonBody: View {
     let scenario: DemoScenario
     let appleLabel: String
     let appleChip: String
+    var accent: Color = DemoTheme.phosphor
     @Binding var showAppleAPI: Bool
+    var prediction: LessonPrediction? = nil
+    var predictionOrder: [Int] = [0, 1]
+    var predictionChoice: Int? = nil
+    var predictionRan: Bool = false
+    var onPickPrediction: (Int) -> Void = { _ in }
     var onMaximizeCode: (() -> Void)? = nil
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             LessonCopy(appleAPI: scenario.appleAPI, blurb: scenario.blurb)
+            if let prediction {
+                LessonPredictionBox(
+                    prediction: prediction,
+                    order: predictionOrder,
+                    choice: predictionChoice,
+                    ran: predictionRan,
+                    accent: accent,
+                    onPick: onPickPrediction
+                )
+            }
             CodeSnippetView(
                 teachingSnippet: scenario.teachingSnippet,
                 appleSnippet: scenario.appleSnippet,
@@ -479,5 +614,73 @@ private struct WorkbenchMaximizeOverlay: View {
             }
             .frame(width: geo.size.width, height: geo.size.height)
         }
+    }
+}
+
+private struct LessonPredictionBox: View {
+    let prediction: LessonPrediction
+    let order: [Int]
+    let choice: Int?
+    let ran: Bool
+    let accent: Color
+    let onPick: (Int) -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Predict, then run")
+                .font(.system(size: DemoLayout.typeSize(11), design: .monospaced))
+                .foregroundStyle(DemoTheme.muted)
+            Text(verbatim: prediction.prompt)
+                .font(.system(size: DemoLayout.typeSize(15), design: .serif))
+                .foregroundStyle(Color.white.opacity(0.9))
+                .fixedSize(horizontal: false, vertical: true)
+            ForEach(order, id: \.self) { index in
+                if prediction.choices.indices.contains(index) {
+                    Button {
+                        onPick(index)
+                    } label: {
+                        Text(verbatim: prediction.choices[index])
+                            .font(.system(size: DemoLayout.typeSize(14), design: .serif))
+                            .foregroundStyle(labelColor(for: index))
+                            .multilineTextAlignment(.leading)
+                            .fixedSize(horizontal: false, vertical: true)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 10)
+                            .background(fill(for: index))
+                            .overlay {
+                                RoundedRectangle(cornerRadius: 4, style: .continuous)
+                                    .strokeBorder(border(for: index), lineWidth: 1)
+                            }
+                    }
+                    .buttonStyle(.plain)
+                    .disabled(ran)
+                }
+            }
+            if ran, let choice, prediction.choices.indices.contains(choice) {
+                Text(choice == prediction.correctIndex ? "That prediction hit." : "That prediction missed.")
+                    .font(.system(size: DemoLayout.typeSize(13), design: .monospaced))
+                    .foregroundStyle(choice == prediction.correctIndex ? DemoTheme.hit : DemoTheme.freeze)
+            }
+        }
+    }
+
+    private func fill(for index: Int) -> Color {
+        if ran, index == prediction.correctIndex { return DemoTheme.hit }
+        if ran, choice == index { return DemoTheme.freeze }
+        if choice == index { return accent.opacity(0.16) }
+        return Color.white.opacity(0.04)
+    }
+
+    private func border(for index: Int) -> Color {
+        if ran, index == prediction.correctIndex { return DemoTheme.hit }
+        if ran, choice == index { return DemoTheme.freeze }
+        if choice == index { return accent.opacity(0.7) }
+        return Color.white.opacity(0.08)
+    }
+
+    private func labelColor(for index: Int) -> Color {
+        let revealed = ran && (index == prediction.correctIndex || choice == index)
+        return revealed ? DemoTheme.void : Color.white.opacity(0.88)
     }
 }

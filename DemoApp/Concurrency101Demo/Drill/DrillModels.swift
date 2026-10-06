@@ -117,6 +117,10 @@ enum DrillBank {
         source(for: track).filter { $0.difficulty == difficulty }
     }
 
+    static func question(id: String, track: LearningTrack) -> DrillQuestion? {
+        source(for: track).first { $0.id == id }
+    }
+
     private static func source(for track: LearningTrack) -> [DrillQuestion] {
         switch track {
         case .gcd: return DrillQuestionsGCD.all

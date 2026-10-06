@@ -30,6 +30,15 @@ enum CurriculumCatalog {
         notes(for: track).first { $0.id == id }
     }
 
+    static func resolveSourceNote(_ raw: String, in track: LearningTrack) -> CurriculumNote? {
+        if let note = resolveWikilink(raw, in: track) { return note }
+        let needle = normalize(raw)
+        guard !needle.isEmpty else { return nil }
+        return notes(for: track).first {
+            normalize($0.fileName) == needle || normalize($0.title) == needle
+        }
+    }
+
     static func resolveWikilink(_ raw: String, in track: LearningTrack) -> CurriculumNote? {
         let needle = normalize(raw)
         let all = notes(for: track)
@@ -52,10 +61,16 @@ enum CurriculumCatalog {
     }
 
     private static func normalize(_ value: String) -> String {
-        value
+        var text = value
             .replacingOccurrences(of: ".md", with: "")
+            .replacingOccurrences(of: "—", with: "-")
+            .replacingOccurrences(of: "–", with: "-")
             .trimmingCharacters(in: .whitespacesAndNewlines)
             .lowercased()
+        if let range = text.range(of: #"^\d+\s*-\s*"#, options: .regularExpression) {
+            text.removeSubrange(range)
+        }
+        return text.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
     private static let gcd: [CurriculumSection] = [
@@ -82,10 +97,20 @@ enum CurriculumCatalog {
 
     private static let modern: [CurriculumSection] = [
         CurriculumSection(
+            id: "start",
+            title: "Start",
+            notes: [
+                modernNote("modern-roadmap", file: "00 - Roadmap", folder: "Curriculum/Modern", index: "00", title: "Roadmap"),
+                modernNote("modern-decision", file: "00 - Decision Procedure", folder: "Curriculum/Modern", index: "—", title: "Decision Procedure"),
+                modernNote("modern-how-drills", file: "Drills - How They Work", folder: "Curriculum/Modern/Drills", index: "—", title: "How Drills Work"),
+                modernNote("modern-lab", file: "Lab Setup", folder: "Curriculum/Modern/Lab", index: "—", title: "Lab Setup"),
+                modernNote("modern-progress", file: "Progress", folder: "Curriculum/Modern", index: "—", title: "Progress"),
+            ]
+        ),
+        CurriculumSection(
             id: "modules",
             title: "Modules",
             notes: [
-                modernNote("modern-decision", file: "00 - Decision Procedure", folder: "Curriculum/Modern", index: "—", title: "Decision Procedure"),
                 modernNote("modern-01", file: "01 - Mental Model", folder: "Curriculum/Modern/Notes", index: "01", title: "Mental Model"),
                 modernNote("modern-02", file: "02 - Async Await Deep Dive", folder: "Curriculum/Modern/Notes", index: "02", title: "async / await"),
                 modernNote("modern-03", file: "03 - Isolation - The Core Concept", folder: "Curriculum/Modern/Notes", index: "03", title: "Isolation"),
@@ -99,6 +124,24 @@ enum CurriculumCatalog {
                 modernNote("modern-11", file: "11 - Swift 6.2 and Modern Defaults", folder: "Curriculum/Modern/Notes", index: "11", title: "Swift 6.2 Defaults"),
                 modernNote("modern-12", file: "12 - Migrating to Swift 6", folder: "Curriculum/Modern/Notes", index: "12", title: "Migrating to Swift 6"),
                 modernNote("modern-13", file: "13 - Testing Concurrent Code", folder: "Curriculum/Modern/Notes", index: "13", title: "Testing Concurrent Code"),
+            ]
+        ),
+        CurriculumSection(
+            id: "practice",
+            title: "Practice",
+            notes: [
+                modernNote("modern-drill-03", file: "Drill 03 - Reading Isolation", folder: "Curriculum/Modern/Drills", index: "03", title: "Reading Isolation"),
+                modernNote("modern-drill-04", file: "Drill 04 - The Reentrancy Bug", folder: "Curriculum/Modern/Drills", index: "04", title: "The Reentrancy Bug"),
+                modernNote("modern-drill-05", file: "Drill 05 - MainActor Propagation", folder: "Curriculum/Modern/Drills", index: "05", title: "MainActor Propagation"),
+                modernNote("modern-drill-06", file: "Drill 06 - Making It Sendable", folder: "Curriculum/Modern/Drills", index: "06", title: "Making It Sendable"),
+                modernNote("modern-drill-07", file: "Drill 07 - Wrap a Delegate", folder: "Curriculum/Modern/Drills", index: "07", title: "Wrap a Delegate"),
+                modernNote("modern-drill-08", file: "Drill 08 - Parallel Fetch", folder: "Curriculum/Modern/Drills", index: "08", title: "Parallel Fetch"),
+                modernNote("modern-drill-09", file: "Drill 09 - Cancel It Properly", folder: "Curriculum/Modern/Drills", index: "09", title: "Cancel It Properly"),
+                modernNote("modern-drill-10", file: "Drill 10 - Build a Stream", folder: "Curriculum/Modern/Drills", index: "10", title: "Build a Stream"),
+                modernNote("modern-drill-11", file: "Drill 11 - Same Code, Four Behaviours", folder: "Curriculum/Modern/Drills", index: "11", title: "Same Code, Four Behaviours"),
+                modernNote("modern-drill-12", file: "Drill 12 - Migrate One Module", folder: "Curriculum/Modern/Drills", index: "12", title: "Migrate One Module"),
+                modernNote("modern-drill-13", file: "Drill 13 - Test the Untestable", folder: "Curriculum/Modern/Drills", index: "13", title: "Test the Untestable"),
+                modernNote("modern-capstone", file: "Capstone", folder: "Curriculum/Modern/Drills", index: "—", title: "Capstone"),
             ]
         ),
         CurriculumSection(
