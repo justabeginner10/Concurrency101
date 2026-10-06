@@ -19,11 +19,16 @@ final class NotesSession {
 
     /// Cheap on purpose: SwiftUI rebuilds `@State` initial values on every
     /// view init. The first note loads in `loadSelectedIfNeeded()`.
-    init(track: LearningTrack, sidebarOpen: Bool) {
+    init(track: LearningTrack, sidebarOpen: Bool, initialNoteID: String? = nil) {
         let sections = CurriculumCatalog.sections(for: track)
         self.track = track
         self.sections = sections
-        self.selectedID = sections.first?.notes.first?.id ?? ""
+        let preferred = initialNoteID ?? LearningMemory.lastNoteID(track: track)
+        if let preferred, CurriculumCatalog.note(id: preferred, in: track) != nil {
+            self.selectedID = preferred
+        } else {
+            self.selectedID = sections.first?.notes.first?.id ?? ""
+        }
         self.sidebarOpen = sidebarOpen
         self.visibleSections = sections
     }
@@ -51,9 +56,15 @@ final class NotesSession {
     func select(_ id: String, collapseSidebar: Bool) {
         selectedID = id
         loadIfNeeded(id)
+        rememberPlace()
         if collapseSidebar {
             sidebarOpen = false
         }
+    }
+
+    func rememberPlace() {
+        guard let selected else { return }
+        LearningMemory.rememberNote(track: track, id: selected.id, title: selected.title)
     }
 
     func loadSelectedIfNeeded() {

@@ -6,9 +6,13 @@ struct NotesStudioView: View {
     @Environment(\.usesPhoneChrome) private var usesPhoneChrome
     @Environment(\.verticalSizeClass) private var verticalSizeClass
 
-    init(track: LearningTrack) {
+    init(track: LearningTrack, initialNoteID: String? = nil) {
         self.track = track
-        _session = State(initialValue: NotesSession(track: track, sidebarOpen: true))
+        _session = State(initialValue: NotesSession(
+            track: track,
+            sidebarOpen: initialNoteID == nil,
+            initialNoteID: initialNoteID
+        ))
     }
 
     private var overlaySidebar: Bool {
@@ -27,7 +31,10 @@ struct NotesStudioView: View {
                 )
             }
         }
-        .onAppear { session.loadSelectedIfNeeded() }
+        .onAppear {
+            session.loadSelectedIfNeeded()
+            session.rememberPlace()
+        }
         .navigationTitle(session.selected.map(\.title) ?? "Notes")
         .demoRoomChrome()
         #if os(iOS)

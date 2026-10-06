@@ -5,9 +5,11 @@ import UIKit
 
 struct DrillQuestionView: View {
     @Bindable var session: DrillSession
+    var onOpenNote: (String) -> Void
 
     var body: some View {
         if let current = session.current {
+            let source = CurriculumCatalog.resolveSourceNote(current.question.sourceNote, in: session.track)
             VStack(spacing: 0) {
                 DrillProgressBar(
                     current: session.index + 1,
@@ -24,11 +26,13 @@ struct DrillQuestionView: View {
                     isFirst: session.isFirst,
                     canGoNext: session.isLocked,
                     sourceNote: current.question.sourceNote,
+                    sourceNoteID: source?.id,
                     explanation: current.question.explanation,
                     showExplain: $session.showExplain,
                     onPick: session.pick,
                     onPrevious: session.goPrevious,
-                    onNext: session.goNext
+                    onNext: session.goNext,
+                    onOpenNote: onOpenNote
                 )
                 .id(current.id)
             }
@@ -74,11 +78,13 @@ private struct DrillQuestionPage: View {
     let isFirst: Bool
     let canGoNext: Bool
     let sourceNote: String
+    let sourceNoteID: String?
     let explanation: String
     @Binding var showExplain: Bool
     let onPick: (Int) -> Void
     let onPrevious: () -> Void
     let onNext: () -> Void
+    let onOpenNote: (String) -> Void
 
     private let marks = ["A", "B", "C", "D"]
 
@@ -120,10 +126,12 @@ private struct DrillQuestionPage: View {
                 previousEnabled: !isFirst,
                 nextEnabled: canGoNext,
                 sourceNote: sourceNote,
+                sourceNoteID: sourceNoteID,
                 explanation: explanation,
                 showExplain: $showExplain,
                 onPrevious: onPrevious,
-                onNext: onNext
+                onNext: onNext,
+                onOpenNote: onOpenNote
             )
         }
     }
@@ -203,10 +211,12 @@ private struct DrillQuestionBar: View {
     let previousEnabled: Bool
     let nextEnabled: Bool
     let sourceNote: String
+    let sourceNoteID: String?
     let explanation: String
     @Binding var showExplain: Bool
     let onPrevious: () -> Void
     let onNext: () -> Void
+    let onOpenNote: (String) -> Void
 
     var body: some View {
         HStack(spacing: 16) {
@@ -214,8 +224,10 @@ private struct DrillQuestionBar: View {
                 enabled: explainEnabled,
                 accent: accent,
                 sourceNote: sourceNote,
+                sourceNoteID: sourceNoteID,
                 explanation: explanation,
-                isPresented: $showExplain
+                isPresented: $showExplain,
+                onOpenNote: onOpenNote
             )
             Spacer()
             Button("Previous", action: onPrevious)
@@ -242,8 +254,10 @@ private struct DrillExplainButton: View {
     let enabled: Bool
     let accent: Color
     let sourceNote: String
+    let sourceNoteID: String?
     let explanation: String
     @Binding var isPresented: Bool
+    let onOpenNote: (String) -> Void
 
     var body: some View {
         Button("Explain") {
@@ -255,8 +269,10 @@ private struct DrillExplainButton: View {
             DrillExplainPresentation(
                 isPresented: $isPresented,
                 sourceNote: sourceNote,
+                sourceNoteID: sourceNoteID,
                 explanation: explanation,
-                accent: accent
+                accent: accent,
+                onOpenNote: onOpenNote
             )
         )
     }
@@ -265,8 +281,10 @@ private struct DrillExplainButton: View {
 private struct DrillExplainPresentation: ViewModifier {
     @Binding var isPresented: Bool
     let sourceNote: String
+    let sourceNoteID: String?
     let explanation: String
     let accent: Color
+    let onOpenNote: (String) -> Void
 
     func body(content: Content) -> some View {
         if DemoLayout.isPadLike {
@@ -302,18 +320,22 @@ private struct DrillExplainPresentation: ViewModifier {
     private var sheet: some View {
         DrillExplainSheet(
             sourceNote: sourceNote,
+            sourceNoteID: sourceNoteID,
             explanation: explanation,
             accent: accent,
-            onDismiss: { isPresented = false }
+            onDismiss: { isPresented = false },
+            onOpenNote: onOpenNote
         )
     }
 }
 
 private struct DrillExplainSheet: View {
     let sourceNote: String
+    let sourceNoteID: String?
     let explanation: String
     let accent: Color
     let onDismiss: () -> Void
+    let onOpenNote: (String) -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -351,6 +373,28 @@ private struct DrillExplainSheet: View {
                     Text(verbatim: sourceNote)
                         .font(.system(size: DemoLayout.typeSize(16), design: .serif))
                         .foregroundStyle(Color.white.opacity(0.88))
+                    if let sourceNoteID {
+                        Button {
+                            onDismiss()
+                            DispatchQueue.main.async {
+                                onOpenNote(sourceNoteID)
+                            }
+                        } label: {
+                            HStack(spacing: 8) {
+                                Text("Open note")
+                                Image(systemName: "chevron.right")
+                                    .font(.system(size: DemoLayout.typeSize(12), weight: .semibold))
+                            }
+                            .font(.system(size: DemoLayout.typeSize(15), weight: .medium, design: .serif))
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 12)
+                            .foregroundStyle(DemoTheme.void)
+                            .background(accent)
+                            .clipShape(RoundedRectangle(cornerRadius: 4, style: .continuous))
+                        }
+                        .buttonStyle(.plain)
+                        .padding(.top, 4)
+                    }
                 }
                 .padding(20)
                 .frame(maxWidth: .infinity, alignment: .leading)
