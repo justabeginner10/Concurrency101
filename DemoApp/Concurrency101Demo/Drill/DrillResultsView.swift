@@ -41,11 +41,25 @@ struct DrillResultsView: View {
                 .clipShape(RoundedRectangle(cornerRadius: 4, style: .continuous))
                 .padding(.top, 8)
 
-                Button("Change difficulty") {
+                Button {
                     session.changeDifficulty()
+                } label: {
+                    HStack(spacing: 8) {
+                        Text("Change difficulty")
+                        Image(systemName: "chevron.right")
+                            .font(.system(size: DemoLayout.typeSize(12), weight: .semibold))
+                    }
+                    .font(.system(size: DemoLayout.typeSize(15), weight: .medium, design: .serif))
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 12)
+                    .foregroundStyle(session.track.accent)
+                    .background(session.track.accent.opacity(0.12))
+                    .overlay {
+                        RoundedRectangle(cornerRadius: 4, style: .continuous)
+                            .strokeBorder(session.track.accent, lineWidth: 1)
+                    }
+                    .clipShape(RoundedRectangle(cornerRadius: 4, style: .continuous))
                 }
-                .font(.system(size: DemoLayout.typeSize(13), design: .monospaced))
-                .foregroundStyle(session.track.accent)
                 .buttonStyle(.plain)
             }
             .padding(.horizontal, 20)

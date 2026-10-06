@@ -8,24 +8,59 @@ struct DrillQuestionView: View {
 
     var body: some View {
         if let current = session.current {
-            DrillQuestionPage(
-                accent: session.track.accent,
-                stem: current.question.stem,
-                snippet: current.question.snippet,
-                options: current.presentedOptions,
-                correctIndex: current.question.correctIndex,
-                pick: session.currentPick,
-                isFirst: session.isFirst,
-                canGoNext: session.isLocked,
-                sourceNote: current.question.sourceNote,
-                explanation: current.question.explanation,
-                showExplain: $session.showExplain,
-                onPick: session.pick,
-                onPrevious: session.goPrevious,
-                onNext: session.goNext
-            )
-            .id(current.id)
+            VStack(spacing: 0) {
+                DrillProgressBar(
+                    current: session.index + 1,
+                    total: session.deck.count,
+                    accent: session.track.accent
+                )
+                DrillQuestionPage(
+                    accent: session.track.accent,
+                    stem: current.question.stem,
+                    snippet: current.question.snippet,
+                    options: current.presentedOptions,
+                    correctIndex: current.question.correctIndex,
+                    pick: session.currentPick,
+                    isFirst: session.isFirst,
+                    canGoNext: session.isLocked,
+                    sourceNote: current.question.sourceNote,
+                    explanation: current.question.explanation,
+                    showExplain: $session.showExplain,
+                    onPick: session.pick,
+                    onPrevious: session.goPrevious,
+                    onNext: session.goNext
+                )
+                .id(current.id)
+            }
         }
+    }
+}
+
+private struct DrillProgressBar: View {
+    let current: Int
+    let total: Int
+    let accent: Color
+
+    private var fraction: Double {
+        guard total > 0 else { return 0 }
+        return Double(current) / Double(total)
+    }
+
+    var body: some View {
+        GeometryReader { geo in
+            ZStack(alignment: .leading) {
+                Rectangle()
+                    .fill(Color.white.opacity(0.08))
+                Rectangle()
+                    .fill(accent)
+                    .frame(width: max(0, geo.size.width * fraction))
+            }
+        }
+        .frame(height: 3)
+        .animation(.easeInOut(duration: 0.25), value: fraction)
+        .accessibilityElement()
+        .accessibilityLabel("Drill progress")
+        .accessibilityValue("Question \(current) of \(total)")
     }
 }
 
@@ -56,18 +91,9 @@ private struct DrillQuestionPage: View {
                         .foregroundStyle(Color.white.opacity(0.9))
                         .fixedSize(horizontal: false, vertical: true)
 
-                    if let snippet {
-                        NumberedSourceBlock(
-                            source: snippet,
-                            fontSize: CGFloat(DemoSourceType.defaultSize),
-                            ruleColor: accent
-                        )
-                        .padding(12)
-                        .background(Color.white.opacity(0.05))
-                        .overlay(
-                            Rectangle()
-                                .strokeBorder(accent.opacity(0.22), lineWidth: 0.5)
-                        )
+                    if let snippet = snippet?.trimmingCharacters(in: .whitespacesAndNewlines),
+                       !snippet.isEmpty {
+                        CodeSnippetView(source: snippet)
                     }
 
                     VStack(spacing: 8) {

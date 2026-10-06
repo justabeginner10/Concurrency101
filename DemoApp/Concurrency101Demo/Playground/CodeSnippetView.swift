@@ -6,6 +6,11 @@ import AppKit
 #endif
 
 struct CodeSnippetView: View {
+    private enum Presentation {
+        case comparison
+        case source
+    }
+
     let teachingSnippet: String
     let appleSnippet: String
     let appleLabel: String
@@ -14,35 +19,86 @@ struct CodeSnippetView: View {
     var fillsAvailableHeight: Bool = false
     var isMaximized: Bool = false
     var onToggleMaximize: (() -> Void)? = nil
+    private let presentation: Presentation
     @AppStorage(DemoSourceType.storageKey) private var sourceFontSize = DemoSourceType.defaultSize
     @State private var copied = false
 
+    init(
+        teachingSnippet: String,
+        appleSnippet: String,
+        appleLabel: String,
+        appleChip: String = "Swift",
+        showAppleAPI: Binding<Bool>,
+        fillsAvailableHeight: Bool = false,
+        isMaximized: Bool = false,
+        onToggleMaximize: (() -> Void)? = nil
+    ) {
+        self.teachingSnippet = teachingSnippet
+        self.appleSnippet = appleSnippet
+        self.appleLabel = appleLabel
+        self.appleChip = appleChip
+        self._showAppleAPI = showAppleAPI
+        self.fillsAvailableHeight = fillsAvailableHeight
+        self.isMaximized = isMaximized
+        self.onToggleMaximize = onToggleMaximize
+        self.presentation = .comparison
+    }
+
+    /// One snippet in the same chrome as the playground, without the Apple comparison toggle.
+    init(source: String) {
+        self.teachingSnippet = source
+        self.appleSnippet = ""
+        self.appleLabel = ""
+        self.appleChip = "Swift"
+        self._showAppleAPI = .constant(false)
+        self.fillsAvailableHeight = false
+        self.isMaximized = false
+        self.onToggleMaximize = nil
+        self.presentation = .source
+    }
+
     private var displayed: String {
-        showAppleAPI ? appleSnippet : teachingSnippet
+        switch presentation {
+        case .source:
+            teachingSnippet
+        case .comparison:
+            showAppleAPI ? appleSnippet : teachingSnippet
+        }
+    }
+
+    private var ruleColor: Color {
+        switch presentation {
+        case .source:
+            DemoTheme.phosphor
+        case .comparison:
+            showAppleAPI ? DemoTheme.cyan : DemoTheme.phosphor
+        }
     }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             HStack(spacing: 10) {
-                Text(showAppleAPI ? appleLabel : "Concurrency101")
+                Text(headerTitle)
                     .font(.system(size: DemoLayout.typeSize(12), design: .serif))
-                    .foregroundStyle(showAppleAPI ? DemoTheme.cyan : DemoTheme.phosphor.opacity(0.85))
+                    .foregroundStyle(headerColor)
 
                 Spacer(minLength: 8)
 
-                HStack(spacing: 6) {
-                    Text("101")
-                        .font(.system(size: DemoLayout.typeSize(11), design: .monospaced))
-                        .foregroundStyle(showAppleAPI ? DemoTheme.muted : DemoTheme.phosphor)
-                    Toggle("Show Apple API", isOn: $showAppleAPI)
-                        .labelsHidden()
-                        .tint(DemoTheme.cyan)
-                        .fixedSize()
-                    Text(verbatim: appleChip)
-                        .font(.system(size: DemoLayout.typeSize(9), design: .monospaced))
-                        .foregroundStyle(showAppleAPI ? DemoTheme.cyan : DemoTheme.muted)
-                        .lineLimit(1)
-                        .fixedSize()
+                if presentation == .comparison {
+                    HStack(spacing: 6) {
+                        Text("101")
+                            .font(.system(size: DemoLayout.typeSize(11), design: .monospaced))
+                            .foregroundStyle(showAppleAPI ? DemoTheme.muted : DemoTheme.phosphor)
+                        Toggle("Show Apple API", isOn: $showAppleAPI)
+                            .labelsHidden()
+                            .tint(DemoTheme.cyan)
+                            .fixedSize()
+                        Text(verbatim: appleChip)
+                            .font(.system(size: DemoLayout.typeSize(9), design: .monospaced))
+                            .foregroundStyle(showAppleAPI ? DemoTheme.cyan : DemoTheme.muted)
+                            .lineLimit(1)
+                            .fixedSize()
+                    }
                 }
 
                 Button(copied ? "Copied" : "Copy") {
@@ -69,7 +125,7 @@ struct CodeSnippetView: View {
                 NumberedSourceBlock(
                     source: displayed,
                     fontSize: CGFloat(sourceFontSize),
-                    ruleColor: showAppleAPI ? DemoTheme.cyan : DemoTheme.phosphor
+                    ruleColor: ruleColor
                 )
                 .padding(12)
             }
@@ -85,6 +141,24 @@ struct CodeSnippetView: View {
                 .strokeBorder(DemoTheme.phosphor.opacity(0.22), lineWidth: 0.5)
         }
         .clipShape(RoundedRectangle(cornerRadius: 4, style: .continuous))
+    }
+
+    private var headerTitle: String {
+        switch presentation {
+        case .source:
+            "Snippet"
+        case .comparison:
+            showAppleAPI ? appleLabel : "Concurrency101"
+        }
+    }
+
+    private var headerColor: Color {
+        switch presentation {
+        case .source:
+            DemoTheme.phosphor.opacity(0.85)
+        case .comparison:
+            showAppleAPI ? DemoTheme.cyan : DemoTheme.phosphor.opacity(0.85)
+        }
     }
 
     private func copySnippet() {
