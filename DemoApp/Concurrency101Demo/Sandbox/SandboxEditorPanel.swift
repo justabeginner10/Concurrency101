@@ -15,24 +15,27 @@ struct SandboxEditorPanel: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            HStack(spacing: 10) {
-                Text("Code")
-                    .font(.system(size: DemoLayout.typeSize(12), design: .serif))
-                    .foregroundStyle(accent.opacity(0.85))
+            VStack(alignment: .leading, spacing: 4) {
+                HStack(spacing: 10) {
+                    Text("Code")
+                        .font(.system(size: DemoLayout.typeSize(12), design: .serif))
+                        .foregroundStyle(accent.opacity(0.85))
+                    Spacer(minLength: 8)
+                    SandboxSourceToggle(session: session)
+                    Button(copied ? "Copied" : "Copy") {
+                        copy()
+                        copied = true
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) {
+                            copied = false
+                        }
+                    }
+                    .font(.system(size: DemoLayout.typeSize(11), design: .monospaced))
+                    .buttonStyle(.plain)
+                    .foregroundStyle(DemoTheme.cyan)
+                }
                 Text(verbatim: status)
                     .font(.system(size: DemoLayout.typeSize(11), design: .monospaced))
                     .foregroundStyle(session.errorCount > 0 ? DemoTheme.freeze : DemoTheme.muted)
-                Spacer(minLength: 8)
-                Button(copied ? "Copied" : "Copy") {
-                    copy()
-                    copied = true
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) {
-                        copied = false
-                    }
-                }
-                .font(.system(size: DemoLayout.typeSize(11), design: .monospaced))
-                .buttonStyle(.plain)
-                .foregroundStyle(DemoTheme.cyan)
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 8)
@@ -89,5 +92,30 @@ struct SandboxEditorPanel: View {
         NSPasteboard.general.clearContents()
         NSPasteboard.general.setString(session.source, forType: .string)
         #endif
+    }
+}
+
+private struct SandboxSourceToggle: View {
+    @Bindable var session: SandboxSession
+
+    var body: some View {
+        HStack(spacing: 6) {
+            Text("101")
+                .font(.system(size: DemoLayout.typeSize(11), design: .monospaced))
+                .foregroundStyle(session.showAppleAPI ? DemoTheme.muted : DemoTheme.phosphor)
+            Toggle("Show Apple API", isOn: $session.showAppleAPI)
+                .labelsHidden()
+                .tint(DemoTheme.cyan)
+                .fixedSize()
+                .disabled(!session.canSwitchVersions || session.isRunning)
+                .accessibilityHint(session.canSwitchVersions
+                    ? "Switches the loaded lesson between teaching names and Apple APIs. Edits to both versions are kept."
+                    : "Load a lesson to compare its teaching and Apple API versions.")
+            Text(verbatim: session.track.shortTitle)
+                .font(.system(size: DemoLayout.typeSize(9), design: .monospaced))
+                .foregroundStyle(session.showAppleAPI ? DemoTheme.cyan : DemoTheme.muted)
+                .lineLimit(1)
+                .fixedSize()
+        }
     }
 }

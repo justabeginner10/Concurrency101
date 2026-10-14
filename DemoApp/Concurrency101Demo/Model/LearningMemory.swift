@@ -168,6 +168,17 @@ enum LearningMemory {
         defaults.set(source, forKey: sandboxDraftKey(track))
     }
 
+    static func sandboxDraftSnapshot(track: LearningTrack) -> SandboxDraftSnapshot? {
+        guard let data = defaults.data(forKey: sandboxDraftKey(track) + ".versions") else { return nil }
+        return try? JSONDecoder().decode(SandboxDraftSnapshot.self, from: data)
+    }
+
+    static func saveSandboxDraftSnapshot(track: LearningTrack, snapshot: SandboxDraftSnapshot) {
+        guard let data = try? JSONEncoder().encode(snapshot) else { return }
+        defaults.set(data, forKey: sandboxDraftKey(track) + ".versions")
+        saveSandboxDraft(track: track, source: snapshot.source)
+    }
+
     private static func markOpenedNote(track: LearningTrack, id: String) {
         var ids = strings(forKey: openedNotesKey(track))
         if !ids.contains(id) {

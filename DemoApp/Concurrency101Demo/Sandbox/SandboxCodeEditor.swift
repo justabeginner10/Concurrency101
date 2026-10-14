@@ -14,8 +14,9 @@ struct SandboxCodeEditor: UIViewRepresentable {
 
     func makeCoordinator() -> Coordinator { Coordinator(source: $source, fontSize: fontSize) }
 
-    func makeUIView(context: Context) -> UITextView {
-        let view = UITextView()
+    func makeUIView(context: Context) -> SandboxTextEditorView {
+        let editor = SandboxTextEditorView(frame: .zero)
+        let view = editor.textView
         view.backgroundColor = .clear
         view.tintColor = UIColor(DemoTheme.cyan)
         view.autocorrectionType = .no
@@ -28,10 +29,12 @@ struct SandboxCodeEditor: UIViewRepresentable {
         view.accessibilityLabel = "Code editor"
         view.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
         view.delegate = context.coordinator
-        return view
+        context.coordinator.editor = editor
+        return editor
     }
 
-    func updateUIView(_ view: UITextView, context: Context) {
+    func updateUIView(_ editor: SandboxTextEditorView, context: Context) {
+        let view = editor.textView
         context.coordinator.source = $source
         context.coordinator.fontSize = fontSize
         guard view.markedTextRange == nil else { return }
@@ -44,6 +47,7 @@ struct SandboxCodeEditor: UIViewRepresentable {
     final class Coordinator: NSObject, UITextViewDelegate {
         var source: Binding<String>
         var fontSize: CGFloat
+        weak var editor: SandboxTextEditorView?
         private var styledSource: String?
         private var styledFontSize: CGFloat?
         private var isStyling = false
@@ -60,6 +64,10 @@ struct SandboxCodeEditor: UIViewRepresentable {
             highlight(view)
         }
 
+        func scrollViewDidScroll(_ scrollView: UIScrollView) {
+            editor?.redrawGutter()
+        }
+
         func highlight(_ view: UITextView) {
             let text = view.text ?? ""
             guard styledSource != text || styledFontSize != fontSize else { return }
@@ -74,6 +82,7 @@ struct SandboxCodeEditor: UIViewRepresentable {
             ]
             styledSource = text
             styledFontSize = fontSize
+            editor?.updateGutter(source: text, fontSize: fontSize)
         }
     }
 }
@@ -115,6 +124,15 @@ struct SandboxCodeEditor: NSViewRepresentable {
         view.textStorage?.delegate = context.coordinator
         context.coordinator.textView = view
         scroll.documentView = view
+        let ruler = SandboxLineNumberRuler(scrollView: scroll, textView: view)
+        scroll.verticalRulerView = ruler
+        scroll.hasVerticalRuler = true
+        scroll.rulersVisible = true
+        context.coordinator.ruler = ruler
+        scroll.contentView.postsBoundsChangedNotifications = true
+        context.coordinator.scrollObserver = NotificationCenter.default.addObserver(
+            forName: NSView.boundsDidChangeNotification, object: scroll.contentView, queue: .main
+        ) { [weak ruler] _ in ruler?.needsDisplay = true }
         return scroll
     }
 
@@ -133,6 +151,8 @@ struct SandboxCodeEditor: NSViewRepresentable {
         var source: Binding<String>
         var fontSize: CGFloat
         weak var textView: NSTextView?
+        weak var ruler: SandboxLineNumberRuler?
+        var scrollObserver: NSObjectProtocol?
         private var styledSource: String?
         private var styledFontSize: CGFloat?
         private var isStyling = false
@@ -140,6 +160,10 @@ struct SandboxCodeEditor: NSViewRepresentable {
         init(source: Binding<String>, fontSize: CGFloat) {
             self.source = source
             self.fontSize = fontSize
+        }
+
+        deinit {
+            if let scrollObserver { NotificationCenter.default.removeObserver(scrollObserver) }
         }
 
         func textDidChange(_ notification: Notification) {
@@ -175,6 +199,7 @@ struct SandboxCodeEditor: NSViewRepresentable {
             ]
             styledSource = view.string
             styledFontSize = fontSize
+            ruler?.update(source: view.string, fontSize: fontSize)
         }
     }
 }

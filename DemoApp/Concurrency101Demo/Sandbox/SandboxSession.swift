@@ -2,6 +2,14 @@ import Foundation
 import Observation
 import Concurrency101Sim
 
+struct SandboxDraftSnapshot: Codable {
+    let source: String
+    let lessonID: String?
+    let showAppleAPI: Bool
+    let teachingSource: String?
+    let appleSource: String?
+}
+
 enum SandboxOutputTab: String, CaseIterable, Identifiable {
     case trace = "Trace"
     case threads = "Threads"
@@ -37,7 +45,7 @@ final class SandboxSession {
         didSet {
             guard source != oldValue else { return }
             scheduleCheck()
-            LearningMemory.saveSandboxDraft(track: track, source: source)
+            saveDraft()
         }
     }
 
@@ -47,6 +55,17 @@ final class SandboxSession {
     private(set) var playhead: Double = 0
     private(set) var isPlaybackDone = true
     private(set) var loadedTitle: String?
+    private(set) var loadedScenario: DemoScenario?
+    private var usesAppleSnippet = false
+    private var teachingDraft: String?
+    private var appleDraft: String?
+
+    var canSwitchVersions: Bool { loadedScenario != nil }
+
+    var showAppleAPI: Bool {
+        get { usesAppleSnippet }
+        set { switchVersion(apple: newValue) }
+    }
 
     var speed: SandboxSpeed = .realTime
     var cores = 4
@@ -66,12 +85,31 @@ final class SandboxSession {
         let scenarios = ScenarioLibrary.scenarios(for: track)
         if let id = initialLessonID, let scenario = scenarios.first(where: { $0.id == id }) {
             source = useAppleSnippet ? scenario.appleSnippet : scenario.teachingSnippet
+            loadedScenario = scenario
+            usesAppleSnippet = useAppleSnippet
             loadedTitle = scenario.title
             loadedSource = source
+        } else if let draft = LearningMemory.sandboxDraftSnapshot(track: track) {
+            source = draft.source
+            if let scenario = scenarios.first(where: { $0.id == draft.lessonID }) {
+                loadedScenario = scenario
+                loadedTitle = scenario.title
+                usesAppleSnippet = draft.showAppleAPI
+                teachingDraft = draft.teachingSource
+                appleDraft = draft.appleSource
+                loadedSource = draft.showAppleAPI ? scenario.appleSnippet : scenario.teachingSnippet
+            }
         } else if let draft = LearningMemory.sandboxDraft(track: track), !draft.isEmpty {
             source = draft
+            if let scenario = scenarios.first(where: { $0.teachingSnippet == draft || $0.appleSnippet == draft }) {
+                loadedScenario = scenario
+                loadedTitle = scenario.title
+                usesAppleSnippet = scenario.appleSnippet == draft
+                loadedSource = draft
+            }
         } else {
             source = scenarios.first?.teachingSnippet ?? ""
+            loadedScenario = scenarios.first
             loadedTitle = scenarios.first?.title
             loadedSource = source
         }
@@ -80,12 +118,18 @@ final class SandboxSession {
     func start() {
         guard !started else { return }
         started = true
-        LearningMemory.saveSandboxDraft(track: track, source: source)
+        saveDraft()
         scheduleCheck(after: .zero)
     }
 
     /// True when loading something else would throw away the learner's work.
     var hasUnsavedEdits: Bool {
+        if let scenario = loadedScenario {
+            let teaching = usesAppleSnippet ? teachingDraft : source
+            let apple = usesAppleSnippet ? source : appleDraft
+            return Self.isEdited(teaching, original: scenario.teachingSnippet)
+                || Self.isEdited(apple, original: scenario.appleSnippet)
+        }
         let trimmed = source.trimmingCharacters(in: .whitespacesAndNewlines)
         return !trimmed.isEmpty && source != loadedSource
     }
@@ -108,17 +152,53 @@ final class SandboxSession {
     func load(_ scenario: DemoScenario, apple: Bool) {
         stopPlayback()
         run = nil
-        source = apple ? scenario.appleSnippet : scenario.teachingSnippet
-        loadedSource = source
+        loadedScenario = scenario
+        usesAppleSnippet = apple
+        teachingDraft = nil
+        appleDraft = nil
+        loadedSource = apple ? scenario.appleSnippet : scenario.teachingSnippet
         loadedTitle = scenario.title
+        source = loadedSource ?? ""
+        saveDraft()
     }
 
     func clearCode() {
         stopPlayback()
         run = nil
-        source = ""
+        loadedScenario = nil
+        usesAppleSnippet = false
+        teachingDraft = nil
+        appleDraft = nil
         loadedSource = ""
         loadedTitle = nil
+        source = ""
+        saveDraft()
+    }
+
+    private func switchVersion(apple: Bool) {
+        guard let scenario = loadedScenario, apple != usesAppleSnippet, !isRunning else { return }
+        if usesAppleSnippet { appleDraft = source } else { teachingDraft = source }
+        stopPlayback()
+        run = nil
+        usesAppleSnippet = apple
+        loadedSource = apple ? scenario.appleSnippet : scenario.teachingSnippet
+        source = apple ? (appleDraft ?? scenario.appleSnippet) : (teachingDraft ?? scenario.teachingSnippet)
+        saveDraft()
+    }
+
+    private static func isEdited(_ draft: String?, original: String) -> Bool {
+        guard let draft, !draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return false }
+        return draft != original
+    }
+
+    private func saveDraft() {
+        LearningMemory.saveSandboxDraftSnapshot(track: track, snapshot: SandboxDraftSnapshot(
+            source: source,
+            lessonID: loadedScenario?.id,
+            showAppleAPI: usesAppleSnippet,
+            teachingSource: usesAppleSnippet ? teachingDraft : source,
+            appleSource: usesAppleSnippet ? source : appleDraft
+        ))
     }
 
     func runCode() {
