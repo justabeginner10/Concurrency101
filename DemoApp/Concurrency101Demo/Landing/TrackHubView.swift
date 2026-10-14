@@ -2,6 +2,7 @@ import SwiftUI
 
 private enum HubDestination: Hashable {
     case playground(String?)
+    case sandbox
     case notes(String?)
     case drill(Bool)
     case errorLog
@@ -67,6 +68,8 @@ struct TrackHubView: View {
             switch selected {
             case .playground(let lessonID):
                 WorkbenchView(track: track, initialLessonID: lessonID)
+            case .sandbox:
+                SandboxView(track: track)
             case .notes(let noteID):
                 NotesStudioView(track: track, initialNoteID: noteID)
             case .drill(let resume):
@@ -88,6 +91,8 @@ struct TrackHubView: View {
         switch room {
         case .playground:
             destination = .playground(nil)
+        case .sandbox:
+            destination = .sandbox
         case .notes:
             destination = .notes(nil)
         case .drill:
@@ -187,7 +192,7 @@ private struct TrackHubHeader: View {
             Text(verbatim: trackTitle)
                 .font(.system(size: DemoLayout.typeSize(28), weight: .regular, design: .serif))
                 .foregroundStyle(accent)
-            Text("Three rooms. Playground runs the lessons. Notes is the curriculum. Drill is the closed-book quiz.")
+            Text("Four rooms. Playground runs the lessons for real. Sandbox runs your edits on a simulated runtime. Notes is the curriculum. Drill is the closed-book quiz.")
                 .font(.system(size: DemoLayout.typeSize(16), design: .serif))
                 .foregroundStyle(Color.white.opacity(0.78))
                 .fixedSize(horizontal: false, vertical: true)

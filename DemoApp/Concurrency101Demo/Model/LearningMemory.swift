@@ -159,6 +159,15 @@ enum LearningMemory {
         defaults.set(data, forKey: errorLogKey(track))
     }
 
+    /// The learner's last Sandbox code for a track.
+    static func sandboxDraft(track: LearningTrack) -> String? {
+        string(forKey: sandboxDraftKey(track))
+    }
+
+    static func saveSandboxDraft(track: LearningTrack, source: String) {
+        defaults.set(source, forKey: sandboxDraftKey(track))
+    }
+
     private static func markOpenedNote(track: LearningTrack, id: String) {
         var ids = strings(forKey: openedNotesKey(track))
         if !ids.contains(id) {
@@ -180,6 +189,7 @@ enum LearningMemory {
     private static func missesKey(_ track: LearningTrack) -> String { "learn.misses.\(track.rawValue)" }
     private static func drillKey(_ track: LearningTrack) -> String { "learn.drill.\(track.rawValue)" }
     private static func errorLogKey(_ track: LearningTrack) -> String { "learn.errors.\(track.rawValue)" }
+    private static func sandboxDraftKey(_ track: LearningTrack) -> String { "learn.sandbox.draft.\(track.rawValue)" }
 
     private static func string(forKey key: String) -> String? {
         defaults.string(forKey: key)

@@ -75,6 +75,41 @@ struct DrillGlyph: View {
     }
 }
 
+/// Thread lanes on a timeline: work, a gap where a thread waits, more work.
+struct SandboxGlyph: View {
+    let accent: Color
+
+    private let lanes: [(lead: CGFloat, first: CGFloat, gap: CGFloat, second: CGFloat)] = [
+        (0, 30, 10, 40),
+        (14, 20, 22, 18),
+        (6, 44, 0, 0),
+    ]
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 7) {
+            ForEach(lanes.indices, id: \.self) { index in
+                let lane = lanes[index]
+                HStack(spacing: 0) {
+                    Color.clear.frame(width: lane.lead, height: 5)
+                    Capsule()
+                        .fill(accent.opacity(index == 0 ? 0.95 : 0.5))
+                        .frame(width: lane.first, height: 5)
+                    if lane.second > 0 {
+                        Capsule()
+                            .strokeBorder(accent.opacity(0.6), style: StrokeStyle(lineWidth: 1, dash: [2, 2]))
+                            .frame(width: lane.gap, height: 5)
+                        Capsule()
+                            .fill(accent.opacity(index == 0 ? 0.95 : 0.5))
+                            .frame(width: lane.second, height: 5)
+                    }
+                }
+            }
+        }
+        .frame(height: 36, alignment: .leading)
+        .accessibilityHidden(true)
+    }
+}
+
 struct PathRoomGlyph: View {
     let room: PathRoom
     let track: LearningTrack
@@ -83,6 +118,8 @@ struct PathRoomGlyph: View {
         switch room {
         case .playground:
             TrackGlyph(track: track)
+        case .sandbox:
+            SandboxGlyph(accent: track.accent)
         case .notes:
             NotesGlyph(accent: track.accent)
         case .drill:

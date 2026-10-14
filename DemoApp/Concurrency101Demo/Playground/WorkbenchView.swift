@@ -8,6 +8,7 @@ struct WorkbenchView: View {
     @State private var consoleExpanded = false
     @State private var confirmDeadlock = false
     @State private var showCheatSheet = false
+    @State private var showSandbox = false
     @State private var showAppleAPI = false
     @State private var maximizedPanel: WorkbenchPanel?
     @State private var predictionChoice: Int?
@@ -114,7 +115,9 @@ struct WorkbenchView: View {
         .demoRoomChrome()
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
-                WorkbenchOptionsMenu(showCheatSheet: $showCheatSheet, accent: track.accent)
+                WorkbenchOptionsMenu(showCheatSheet: $showCheatSheet, accent: track.accent) {
+                    showSandbox = true
+                }
             }
         }
         .alert("This freezes the app", isPresented: $confirmDeadlock) {
@@ -127,6 +130,9 @@ struct WorkbenchView: View {
         }
         .sheet(isPresented: $showCheatSheet) {
             CheatSheetView(track: track)
+        }
+        .navigationDestination(isPresented: $showSandbox) {
+            SandboxView(track: track, initialLessonID: selected.id, useAppleSnippet: showAppleAPI)
         }
     }
 

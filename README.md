@@ -51,6 +51,17 @@ open /Users/adityaraj/Documents/Concurrency101/DemoApp/Concurrency101Demo.xcodep
 
 Pick an iPhone simulator, press Run, choose a track, choose a lesson, tap **Run lesson**. Skip the freeze lessons unless you intend to hang the app (Stop in Xcode to recover).
 
+### Sandbox
+
+Each track hub also has a **Sandbox** room (and the Playground's options menu has **Open in Sandbox**). Edit any lesson, or write your own code, and run it on a **simulated runtime** instead of the real one. The runtime is the `Concurrency101Sim` package target: a small Swift interpreter with one main thread, a GCD worker pool, a fixed Swift task pool, actors, queues, and a virtual clock.
+
+- Nothing real is scheduled, so the freeze lessons are safe here. A deadlock comes back as a diagnosis ("main.sync was called on the main thread…"), not a frozen app.
+- **Trace** shows each line with its virtual time, its thread, and its queue, actor, or task. **Threads** draws one row per thread: solid bars are running, outlined bars are holding the thread while waiting.
+- **Shuffle** replays the same code with another valid interleaving. The same seed always gives the same run. **Cores** sets the size of the task pool.
+- Compile errors show as you type (`await` in synchronous code, a missing `try`, an unknown name).
+
+It is a model, not the real runtime. The ordering and the failure modes are realistic; the timings and thread counts are illustrative. Structs, protocols, generics, dictionaries and `Sendable` checking are not modelled. The **?** button in the Sandbox lists exactly what is.
+
 ## Two-axis mental model (GCD)
 
 Queue type controls whether submitted work may overlap. Submission type controls whether the caller waits.
@@ -169,6 +180,12 @@ Concurrency101.Modern.Blocking.parkThisThreadUntilTaskFinishes {
 ```bash
 cd /Users/adityaraj/Documents/Concurrency101
 swift test
+```
+
+`Concurrency101SimTests` runs every Playground lesson snippet (teaching and Apple versions) through the simulator and checks each one shows what its lesson teaches. To print every simulated trace:
+
+```bash
+SIM_DUMP=1 swift test --filter LessonDumpTests
 ```
 
 GCD lessons:

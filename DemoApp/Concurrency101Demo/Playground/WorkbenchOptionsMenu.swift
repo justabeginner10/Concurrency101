@@ -3,10 +3,14 @@ import SwiftUI
 struct WorkbenchOptionsMenu: View {
     @Binding var showCheatSheet: Bool
     let accent: Color
+    let onOpenSandbox: () -> Void
     @AppStorage(DemoSourceType.storageKey) private var size = DemoSourceType.defaultSize
 
     var body: some View {
         Menu {
+            Button(action: onOpenSandbox) {
+                Label("Open in Sandbox", systemImage: "hammer")
+            }
             Button {
                 showCheatSheet = true
             } label: {
