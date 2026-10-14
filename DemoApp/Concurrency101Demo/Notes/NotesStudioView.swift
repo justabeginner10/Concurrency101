@@ -35,7 +35,7 @@ struct NotesStudioView: View {
             session.loadSelectedIfNeeded()
             session.rememberPlace()
         }
-        .navigationTitle(session.selected.map(\.title) ?? "Notes")
+        .navigationTitle("")
         .demoRoomChrome()
         #if os(iOS)
         .toolbar {

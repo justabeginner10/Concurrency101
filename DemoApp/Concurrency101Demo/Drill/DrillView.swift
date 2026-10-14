@@ -71,7 +71,7 @@ struct DrillView: View {
     private var title: String {
         switch session.phase {
         case .lobby, .results:
-            return "Drill"
+            return ""
         case .running:
             return "\(session.index + 1) / \(session.deck.count)"
         }

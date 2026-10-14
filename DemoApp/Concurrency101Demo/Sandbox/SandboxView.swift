@@ -55,7 +55,7 @@ struct SandboxView: View {
             }
         }
         .task { session.start() }
-        .navigationTitle("Sandbox")
+        .navigationTitle("")
         .demoRoomChrome()
         .toolbar {
             ToolbarItem(placement: .primaryAction) {

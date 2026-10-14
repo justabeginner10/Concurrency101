@@ -111,7 +111,7 @@ struct WorkbenchView: View {
             }
             rememberLesson()
         }
-        .navigationTitle("Playground")
+        .navigationTitle("")
         .demoRoomChrome()
         .toolbar {
             ToolbarItem(placement: .primaryAction) {

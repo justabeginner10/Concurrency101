@@ -33,7 +33,7 @@ struct ErrorLogView: View {
                 .frame(maxWidth: 720, alignment: .leading)
             }
         }
-        .navigationTitle("Error log")
+        .navigationTitle("")
         .demoRoomChrome()
         .onAppear {
             entries = LearningMemory.errorLog(track: track)

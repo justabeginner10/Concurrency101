@@ -56,7 +56,7 @@ struct TrackHubView: View {
                 .padding(.bottom, 40)
             }
         }
-        .navigationTitle(track.hubNavigationTitle)
+        .navigationTitle("")
         .demoRoomChrome()
         .onAppear(perform: reload)
         .navigationDestination(item: $destination) { selected in
