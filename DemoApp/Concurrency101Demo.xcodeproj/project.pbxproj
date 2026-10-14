@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		059B0A04306D629500978787 /* Concurrency101 in Frameworks */ = {isa = PBXBuildFile; productRef = A1000000000000000000000A /* Concurrency101 */; };
 		059B0A05306D7A0100000003 /* MarkdownUI in Frameworks */ = {isa = PBXBuildFile; productRef = 059B0A05306D7A0100000002 /* MarkdownUI */; };
+		A10000000000000000000013 /* Concurrency101Sim in Frameworks */ = {isa = PBXBuildFile; productRef = A10000000000000000000012 /* Concurrency101Sim */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -30,6 +31,7 @@
 			files = (
 				059B0A04306D629500978787 /* Concurrency101 in Frameworks */,
 				059B0A05306D7A0100000003 /* MarkdownUI in Frameworks */,
+				A10000000000000000000013 /* Concurrency101Sim in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -74,6 +76,7 @@
 			packageProductDependencies = (
 				A1000000000000000000000A /* Concurrency101 */,
 				059B0A05306D7A0100000002 /* MarkdownUI */,
+				A10000000000000000000012 /* Concurrency101Sim */,
 			);
 			productName = Concurrency101Demo;
 			productReference = A10000000000000000000002 /* Concurrency101Demo.app */;
@@ -316,6 +319,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = A1000000000000000000000D /* XCLocalSwiftPackageReference ".." */;
 			productName = Concurrency101;
+		};
+		A10000000000000000000012 /* Concurrency101Sim */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A1000000000000000000000D /* XCLocalSwiftPackageReference ".." */;
+			productName = Concurrency101Sim;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

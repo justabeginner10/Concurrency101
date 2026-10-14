@@ -37,19 +37,47 @@ struct DrillLobbyView: View {
                         .foregroundStyle(DemoTheme.muted)
                 }
 
+                if session.pendingMissCount > 0 {
+                    Text("\(session.pendingMissCount) missed \(session.pendingMissCount == 1 ? "question comes" : "questions come") back first.")
+                        .font(.system(size: DemoLayout.typeSize(13), design: .monospaced))
+                        .foregroundStyle(DemoTheme.muted)
+                }
+
+                if session.hasSavedRun {
+                    Button {
+                        session.resumeSaved()
+                    } label: {
+                        Text("Resume")
+                            .font(.system(size: DemoLayout.typeSize(15), weight: .medium, design: .serif))
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 12)
+                            .background(session.track.accent)
+                            .foregroundStyle(DemoTheme.void)
+                    }
+                    .buttonStyle(.plain)
+                    .clipShape(RoundedRectangle(cornerRadius: 4, style: .continuous))
+                    .padding(.top, 8)
+                }
+
                 Button {
                     session.start()
                 } label: {
-                    Text("Start")
+                    Text(session.hasSavedRun ? "New run" : "Start")
                         .font(.system(size: DemoLayout.typeSize(15), weight: .medium, design: .serif))
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 12)
-                        .background(session.track.accent)
-                        .foregroundStyle(DemoTheme.void)
+                        .background(session.hasSavedRun ? Color.clear : session.track.accent)
+                        .foregroundStyle(session.hasSavedRun ? session.track.accent : DemoTheme.void)
+                        .overlay {
+                            if session.hasSavedRun {
+                                RoundedRectangle(cornerRadius: 4, style: .continuous)
+                                    .strokeBorder(session.track.accent, lineWidth: 1)
+                            }
+                        }
                 }
                 .buttonStyle(.plain)
                 .clipShape(RoundedRectangle(cornerRadius: 4, style: .continuous))
-                .padding(.top, 8)
+                .padding(.top, session.hasSavedRun ? 0 : 8)
             }
             .padding(.horizontal, 20)
             .padding(.top, 28)

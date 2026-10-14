@@ -7,4 +7,8 @@ struct DemoScenario: Identifiable {
     let appleSnippet: String
     let isDestructive: Bool
     let run: (DemoLog) -> Void
+
+    var prediction: LessonPrediction? {
+        LessonPredictions.prediction(for: id)
+    }
 }

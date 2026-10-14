@@ -1,6 +1,11 @@
 import SwiftUI
+#if os(iOS)
+import UIKit
+#elseif os(macOS)
+import AppKit
+#endif
 
-/// Lightweight highlighting for playground snippets and the glass console.
+/// Lightweight highlighting for snippets, the code editor and the glass console.
 /// Not a Swift parser — paints the tokens a learner should spot at a glance.
 enum DemoSyntax {
     static func highlight(_ text: String, defaultColor: Color = DemoTheme.syntaxPlain) -> AttributedString {
@@ -14,6 +19,29 @@ enum DemoSyntax {
             var piece = AttributedString(String(text[index..<end]))
             piece.foregroundColor = color
             result += piece
+            index = end
+        }
+        return result
+    }
+
+    /// Native text views use the same tokens and palette as Playground.
+    /// Keep the source exact, including an empty editor and trailing newlines.
+    static func editableSource(_ text: String, fontSize: CGFloat) -> NSAttributedString {
+        #if os(iOS)
+        let font = UIFont.monospacedSystemFont(ofSize: fontSize, weight: .regular)
+        #elseif os(macOS)
+        let font = NSFont.monospacedSystemFont(ofSize: fontSize, weight: .regular)
+        #endif
+        let result = NSMutableAttributedString(string: text, attributes: [.font: font])
+        var index = text.startIndex
+        while index < text.endIndex {
+            let (end, color) = token(from: index, in: text, defaultColor: DemoTheme.syntaxPlain)
+            #if os(iOS)
+            let nativeColor = UIColor(color)
+            #elseif os(macOS)
+            let nativeColor = NSColor(color)
+            #endif
+            result.addAttribute(.foregroundColor, value: nativeColor, range: NSRange(index..<end, in: text))
             index = end
         }
         return result
@@ -35,7 +63,8 @@ enum DemoSyntax {
         }
 
         if ch == "/", text.index(after: start) < text.endIndex, text[text.index(after: start)] == "/" {
-            return (text.endIndex, DemoTheme.muted)
+            let end = text[start...].firstIndex(where: { $0.isNewline }) ?? text.endIndex
+            return (end, DemoTheme.muted)
         }
 
         if ch == "." {

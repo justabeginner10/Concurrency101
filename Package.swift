@@ -12,6 +12,7 @@ let package = Package(
     ],
     products: [
         .library(name: "Concurrency101", targets: ["Concurrency101"]),
+        .library(name: "Concurrency101Sim", targets: ["Concurrency101Sim"]),
         .executable(name: "GCDUpdateUIExample", targets: ["GCDUpdateUIExample"]),
         .executable(name: "GCDUserWaitingVersusNotWaitingExample", targets: ["GCDUserWaitingVersusNotWaitingExample"]),
         .executable(name: "GCDPrivateSerialLaneExample", targets: ["GCDPrivateSerialLaneExample"]),
@@ -31,6 +32,7 @@ let package = Package(
     ],
     targets: [
         .target(name: "Concurrency101"),
+        .target(name: "Concurrency101Sim"),
         .target(
             name: "ExampleSupport",
             dependencies: [],
@@ -39,6 +41,10 @@ let package = Package(
         .testTarget(
             name: "Concurrency101Tests",
             dependencies: ["Concurrency101"]
+        ),
+        .testTarget(
+            name: "Concurrency101SimTests",
+            dependencies: ["Concurrency101Sim"]
         ),
         .executableTarget(
             name: "GCDUpdateUIExample",

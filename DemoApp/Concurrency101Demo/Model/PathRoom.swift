@@ -1,5 +1,6 @@
 enum PathRoom: String, Hashable, Identifiable, CaseIterable {
     case playground
+    case sandbox
     case notes
     case drill
 
@@ -8,6 +9,7 @@ enum PathRoom: String, Hashable, Identifiable, CaseIterable {
     var title: String {
         switch self {
         case .playground: return "Playground"
+        case .sandbox: return "Sandbox"
         case .notes: return "Notes"
         case .drill: return "Drill"
         }
@@ -17,6 +19,8 @@ enum PathRoom: String, Hashable, Identifiable, CaseIterable {
         switch self {
         case .playground:
             return "Run the lessons. Watch work land on the glass console — the same lines Xcode prints."
+        case .sandbox:
+            return "Edit a lesson or write your own, then run it on a simulated runtime. A deadlock becomes a diagnosis, not a frozen app."
         case .notes:
             return "The Obsidian curriculum for this path, \(noteCount) notes, with a sidebar to move between them."
         case .drill:
@@ -27,6 +31,7 @@ enum PathRoom: String, Hashable, Identifiable, CaseIterable {
     var cta: String {
         switch self {
         case .playground: return "Open Playground"
+        case .sandbox: return "Open Sandbox"
         case .notes: return "Open Notes"
         case .drill: return "Open Drill"
         }
