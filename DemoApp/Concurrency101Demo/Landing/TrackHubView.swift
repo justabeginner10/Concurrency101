@@ -32,18 +32,13 @@ struct TrackHubView: View {
                             open(continueTarget)
                         }
                     }
-                    AdaptiveCardStack(usesPhoneChrome: usesPhoneChrome) {
-                        ForEach(PathRoom.allCases) { room in
-                            PathRoomCard(
-                                room: room,
-                                track: track,
-                                noteCount: noteCount,
-                                compactVertical: verticalSizeClass == .compact
-                            ) {
-                                open(room)
-                            }
-                        }
-                    }
+                    TrackRoomCards(
+                        track: track,
+                        noteCount: noteCount,
+                        usesPhoneChrome: usesPhoneChrome,
+                        compactVertical: verticalSizeClass == .compact,
+                        onOpen: open
+                    )
                     PathSectionView(
                         track: track,
                         openedNoteIDs: openedNoteIDs,
@@ -196,29 +191,6 @@ private struct TrackHubHeader: View {
                 .font(.system(size: DemoLayout.typeSize(16), design: .serif))
                 .foregroundStyle(Color.white.opacity(0.78))
                 .fixedSize(horizontal: false, vertical: true)
-        }
-    }
-}
-
-private struct PathRoomCard: View {
-    let room: PathRoom
-    let track: LearningTrack
-    let noteCount: Int
-    var compactVertical: Bool = false
-    let action: () -> Void
-
-    var body: some View {
-        ChoiceCard(
-            title: room.title,
-            blurb: room.blurb(noteCount: noteCount),
-            cta: room.cta,
-            accent: track.accent,
-            ctaOpacity: room.ctaOpacity,
-            compactVertical: compactVertical,
-            minHeight: compactVertical ? 160 : 240,
-            action: action
-        ) {
-            PathRoomGlyph(room: room, track: track)
         }
     }
 }

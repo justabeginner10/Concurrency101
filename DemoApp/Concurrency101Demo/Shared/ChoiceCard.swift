@@ -9,6 +9,7 @@ struct ChoiceCard<Glyph: View>: View {
     var ctaOpacity: Double = 1
     var compactVertical: Bool = false
     var minHeight: CGFloat
+    var fillsAvailableHeight: Bool = false
     let action: () -> Void
     @ViewBuilder var glyph: () -> Glyph
 
@@ -34,7 +35,8 @@ struct ChoiceCard<Glyph: View>: View {
                     .background(accent.opacity(ctaOpacity))
                     .clipShape(RoundedRectangle(cornerRadius: 3, style: .continuous))
             }
-            .frame(maxWidth: .infinity, minHeight: minHeight, alignment: .topLeading)
+            .frame(maxWidth: .infinity, minHeight: minHeight,
+                   maxHeight: fillsAvailableHeight ? .infinity : nil, alignment: .topLeading)
             .padding(20)
             .background(Color.white.opacity(0.04))
             .overlay {
