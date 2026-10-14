@@ -76,23 +76,10 @@ struct SandboxEditorPanel: View {
         }
     }
 
-    @ViewBuilder
     private var editor: some View {
-        let field = TextEditor(text: $session.source)
-            .font(.system(size: CGFloat(sourceFontSize), design: .monospaced))
-            .foregroundStyle(DemoTheme.syntaxPlain)
-            .scrollContentBackground(.hidden)
-            .autocorrectionDisabled()
+        SandboxCodeEditor(source: $session.source, fontSize: CGFloat(sourceFontSize))
             .padding(.horizontal, 8)
             .padding(.vertical, 4)
-            .accessibilityLabel("Code editor")
-        #if os(iOS)
-        field
-            .textInputAutocapitalization(.never)
-            .keyboardType(.asciiCapable)
-        #else
-        field
-        #endif
     }
 
     private func copy() {
