@@ -9,6 +9,8 @@ struct SandboxView: View {
 
     @State private var session: SandboxSession
     @State private var showHelp = false
+    @State private var showLessonPicker = false
+    @State private var pickedLoad: PendingLoad?
     @State private var pendingLoad: PendingLoad?
     @Environment(\.usesPhoneChrome) private var usesPhoneChrome
 
@@ -73,6 +75,12 @@ struct SandboxView: View {
         .sheet(isPresented: $showHelp) {
             SandboxHelpSheet(accent: track.accent)
         }
+        .sheet(isPresented: $showLessonPicker, onDismiss: finishPickingLesson) {
+            SandboxLessonPicker(scenarios: session.scenarios, accent: track.accent) { scenario, apple in
+                pickedLoad = PendingLoad(scenario: scenario, apple: apple)
+                showLessonPicker = false
+            }
+        }
         .confirmationDialog(
             "Replace your code?",
             isPresented: Binding(get: { pendingLoad != nil }, set: { if !$0 { pendingLoad = nil } }),
@@ -92,9 +100,14 @@ struct SandboxView: View {
         SandboxControls(
             session: session,
             accent: track.accent,
-            onLoad: { scenario, apple in request(PendingLoad(scenario: scenario, apple: apple)) },
-            onClear: { request(PendingLoad(scenario: nil, apple: false)) }
+            onChooseLesson: { showLessonPicker = true }
         )
+    }
+
+    private func finishPickingLesson() {
+        guard let load = pickedLoad else { return }
+        pickedLoad = nil
+        request(load)
     }
 
     private func request(_ load: PendingLoad) {
@@ -135,26 +148,12 @@ private struct SandboxHeader: View {
 private struct SandboxControls: View {
     let session: SandboxSession
     let accent: Color
-    let onLoad: (DemoScenario, Bool) -> Void
-    let onClear: () -> Void
+    let onChooseLesson: () -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack(spacing: 10) {
-                Menu {
-                    Menu("Concurrency101 names") {
-                        ForEach(session.scenarios) { scenario in
-                            Button(scenario.title) { onLoad(scenario, false) }
-                        }
-                    }
-                    Menu("Apple API") {
-                        ForEach(session.scenarios) { scenario in
-                            Button(scenario.title) { onLoad(scenario, true) }
-                        }
-                    }
-                    Divider()
-                    Button("Blank editor", role: .destructive, action: onClear)
-                } label: {
+                Button(action: onChooseLesson) {
                     HStack(spacing: 8) {
                         Text(verbatim: session.loadedTitle.map { "From: \($0)" } ?? "Your code")
                             .font(.system(size: DemoLayout.typeSize(12), design: .monospaced))
@@ -174,9 +173,8 @@ private struct SandboxControls: View {
                     .contentShape(RoundedRectangle(cornerRadius: 4, style: .continuous))
                 }
                 .buttonStyle(.plain)
-                .menuIndicator(.hidden)
-                .menuOrder(.fixed)
                 .accessibilityLabel("Start from a lesson")
+                .accessibilityValue(session.loadedTitle ?? "Your code")
 
                 Button(action: session.runCode) {
                     Text(session.isRunning ? "Running…" : "Run")
