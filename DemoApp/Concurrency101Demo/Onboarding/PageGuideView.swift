@@ -29,14 +29,8 @@ struct PageGuideView: View {
                     .shadow(color: accent.opacity(0.5), radius: 8)
                     .allowsHitTesting(false)
                     .accessibilityHidden(true)
-                Path { path in
-                    path.move(to: placement.connectorStart)
-                    path.addLine(to: placement.connectorEnd)
-                }
-                .stroke(accent, lineWidth: 2)
-                .allowsHitTesting(false)
-                .accessibilityHidden(true)
                 PageGuideTooltip(step: step, accent: accent, current: current, total: total,
+                                 pointerEdge: placement.pointerEdge, pointerOffset: placement.pointerOffset,
                                  onSkip: onSkip, onBack: onBack, onNext: onNext)
                     .frame(width: placement.tooltip.width, height: placement.tooltip.height)
                     .position(x: placement.tooltip.midX, y: placement.tooltip.midY)
@@ -68,12 +62,15 @@ struct PageGuideTooltip: View {
     let accent: Color
     let current: Int
     let total: Int
+    let pointerEdge: PageGuidePlacement.PointerEdge
+    let pointerOffset: CGFloat
     let onSkip: () -> Void
     let onBack: () -> Void
     let onNext: () -> Void
     @AccessibilityFocusState private var titleFocused: Bool
 
     var body: some View {
+        let bubble = PageGuideBubble(edge: pointerEdge, offset: pointerOffset)
         VStack(alignment: .leading, spacing: 10) {
             ScrollView {
                 VStack(alignment: .leading, spacing: 10) {
@@ -128,9 +125,65 @@ struct PageGuideTooltip: View {
             .controlSize(.regular)
         }
         .padding(14)
-        .background(DemoTheme.void, in: RoundedRectangle(cornerRadius: 12))
-        .overlay { RoundedRectangle(cornerRadius: 12).strokeBorder(accent.opacity(0.65), lineWidth: 1) }
+        .background { bubble.fill(DemoTheme.void) }
+        .overlay {
+            bubble.stroke(accent.opacity(0.65), lineWidth: 1)
+                .allowsHitTesting(false)
+                .accessibilityHidden(true)
+        }
         .shadow(color: .black.opacity(0.5), radius: 12, y: 4)
         .onAppear { titleFocused = true }
+    }
+}
+
+/// One continuous outline avoids a seam where the pointer joins the card.
+private struct PageGuideBubble: Shape {
+    let edge: PageGuidePlacement.PointerEdge
+    let offset: CGFloat
+
+    func path(in rect: CGRect) -> Path {
+        let radius = min(12, min(rect.width, rect.height) / 2)
+        let halfBase: CGFloat = 9
+        let depth: CGFloat = 10
+        let length = (edge == .top || edge == .bottom) ? rect.width : rect.height
+        let clearance = min(radius + halfBase + 2, length / 2)
+        let center = min(max(offset, clearance), length - clearance)
+        let base = min(halfBase, max(0, length / 2 - radius))
+        var path = Path()
+        path.move(to: CGPoint(x: rect.minX + radius, y: rect.minY))
+        if edge == .top {
+            path.addLine(to: CGPoint(x: rect.minX + center - base, y: rect.minY))
+            path.addLine(to: CGPoint(x: rect.minX + center, y: rect.minY - depth))
+            path.addLine(to: CGPoint(x: rect.minX + center + base, y: rect.minY))
+        }
+        path.addLine(to: CGPoint(x: rect.maxX - radius, y: rect.minY))
+        path.addQuadCurve(to: CGPoint(x: rect.maxX, y: rect.minY + radius),
+                          control: CGPoint(x: rect.maxX, y: rect.minY))
+        if edge == .right {
+            path.addLine(to: CGPoint(x: rect.maxX, y: rect.minY + center - base))
+            path.addLine(to: CGPoint(x: rect.maxX + depth, y: rect.minY + center))
+            path.addLine(to: CGPoint(x: rect.maxX, y: rect.minY + center + base))
+        }
+        path.addLine(to: CGPoint(x: rect.maxX, y: rect.maxY - radius))
+        path.addQuadCurve(to: CGPoint(x: rect.maxX - radius, y: rect.maxY),
+                          control: CGPoint(x: rect.maxX, y: rect.maxY))
+        if edge == .bottom {
+            path.addLine(to: CGPoint(x: rect.minX + center + base, y: rect.maxY))
+            path.addLine(to: CGPoint(x: rect.minX + center, y: rect.maxY + depth))
+            path.addLine(to: CGPoint(x: rect.minX + center - base, y: rect.maxY))
+        }
+        path.addLine(to: CGPoint(x: rect.minX + radius, y: rect.maxY))
+        path.addQuadCurve(to: CGPoint(x: rect.minX, y: rect.maxY - radius),
+                          control: CGPoint(x: rect.minX, y: rect.maxY))
+        if edge == .left {
+            path.addLine(to: CGPoint(x: rect.minX, y: rect.minY + center + base))
+            path.addLine(to: CGPoint(x: rect.minX - depth, y: rect.minY + center))
+            path.addLine(to: CGPoint(x: rect.minX, y: rect.minY + center - base))
+        }
+        path.addLine(to: CGPoint(x: rect.minX, y: rect.minY + radius))
+        path.addQuadCurve(to: CGPoint(x: rect.minX + radius, y: rect.minY),
+                          control: CGPoint(x: rect.minX, y: rect.minY))
+        path.closeSubpath()
+        return path
     }
 }

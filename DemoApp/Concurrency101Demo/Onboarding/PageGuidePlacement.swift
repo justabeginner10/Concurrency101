@@ -6,8 +6,10 @@ import CoreGraphics
 struct PageGuidePlacement {
     let highlight: CGRect
     let tooltip: CGRect
-    let connectorStart: CGPoint
-    let connectorEnd: CGPoint
+    enum PointerEdge { case top, right, bottom, left }
+
+    let pointerEdge: PointerEdge
+    let pointerOffset: CGFloat
 
     init(target: CGRect, viewport: CGSize) {
         let bounds = CGRect(origin: .zero, size: viewport).insetBy(dx: 12, dy: 12)
@@ -46,18 +48,21 @@ struct PageGuidePlacement {
         }
         highlight = hole
         tooltip = card
+        // Keep the pointer base away from rounded corners while aiming at
+        // the highlighted component, even when the card is viewport-clamped.
+        let cornerClearance: CGFloat = 24
         if card.minX >= hole.maxX {
-            connectorStart = CGPoint(x: hole.maxX, y: hole.midY)
-            connectorEnd = CGPoint(x: card.minX, y: card.midY)
+            pointerEdge = .left
+            pointerOffset = min(max(hole.midY - card.minY, cornerClearance), card.height - cornerClearance)
         } else if card.maxX <= hole.minX {
-            connectorStart = CGPoint(x: hole.minX, y: hole.midY)
-            connectorEnd = CGPoint(x: card.maxX, y: card.midY)
+            pointerEdge = .right
+            pointerOffset = min(max(hole.midY - card.minY, cornerClearance), card.height - cornerClearance)
         } else if card.minY >= hole.maxY {
-            connectorStart = CGPoint(x: min(max(card.midX, hole.minX), hole.maxX), y: hole.maxY)
-            connectorEnd = CGPoint(x: card.midX, y: card.minY)
+            pointerEdge = .top
+            pointerOffset = min(max(hole.midX - card.minX, cornerClearance), card.width - cornerClearance)
         } else {
-            connectorStart = CGPoint(x: min(max(card.midX, hole.minX), hole.maxX), y: hole.minY)
-            connectorEnd = CGPoint(x: card.midX, y: card.maxY)
+            pointerEdge = .bottom
+            pointerOffset = min(max(hole.midX - card.minX, cornerClearance), card.width - cornerClearance)
         }
     }
 }
