@@ -57,6 +57,7 @@ struct NotesStudioView: View {
             }
         }
         #endif
+        .pageGuide(.notes, accent: track.accent)
     }
 }
 
@@ -93,6 +94,8 @@ private enum NotesDrawer {
 private struct CompactNotesLayout: View {
     @Bindable var session: NotesSession
     let accent: Color
+    @Environment(\.pageGuideSession) private var guide
+    @State private var sidebarBeforeGuide: Bool?
 
     var body: some View {
         ZStack(alignment: .trailing) {
@@ -124,6 +127,15 @@ private struct CompactNotesLayout: View {
             .accessibilityHidden(!session.sidebarOpen)
         }
         .animation(NotesDrawer.animation, value: session.sidebarOpen)
+        .onChange(of: guide?.activeTargetID) { _, id in
+            if let id {
+                if sidebarBeforeGuide == nil { sidebarBeforeGuide = session.sidebarOpen }
+                session.sidebarOpen = id == PageGuidePage.notes.targetID("index") || id == PageGuidePage.notes.targetID("search")
+            } else if let previous = sidebarBeforeGuide {
+                session.sidebarOpen = previous
+                sidebarBeforeGuide = nil
+            }
+        }
     }
 }
 
@@ -152,6 +164,7 @@ private struct NotesSidebar: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             NotesSidebarHeader(query: $query, accent: accent)
+                .pageGuideTarget(.notes, "index")
 
             if sections.isEmpty {
                 Text("No notes match that search.")
@@ -211,6 +224,7 @@ private struct NotesSidebarHeader: View {
                 Rectangle()
                     .strokeBorder(accent.opacity(0.28), lineWidth: 1)
             }
+            .pageGuideTarget(.notes, "search")
         }
         .padding(.horizontal, 14)
         .padding(.top, 16)
@@ -291,6 +305,7 @@ private struct NoteReaderPane: View {
                     title: selected.title,
                     accent: accent
                 )
+                .pageGuideTarget(.notes, "article")
             }
 
             ScrollView {
@@ -303,6 +318,7 @@ private struct NoteReaderPane: View {
                 .padding(.horizontal, 20)
                 .padding(.top, 8)
                 .padding(.bottom, 24)
+                .pageGuideTarget(.notes, "links", enabled: session.markdown.contains("](curriculum:") || session.markdown.contains("](https:"))
 
                 NotePagerBar(
                     hasPrevious: session.previousID != nil,
@@ -321,7 +337,9 @@ private struct NoteReaderPane: View {
                 )
                 .padding(.horizontal, 20)
                 .padding(.bottom, 36)
+                .pageGuideTarget(.notes, "pager")
             }
+            .pageGuideScroll()
             .id(session.selectedID)
         }
     }

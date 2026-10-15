@@ -12,14 +12,18 @@ struct LandingView: View {
                     LandingHeader()
                     AdaptiveCardStack(usesPhoneChrome: usesPhoneChrome) {
                         TrackDoor(track: .gcd, compactVertical: compactVertical) { track = .gcd }
+                            .pageGuideTarget(.home, "gcd")
                         TrackDoor(track: .modern, compactVertical: compactVertical) { track = .modern }
+                            .pageGuideTarget(.home, "modern")
                     }
                 }
                 .padding(.horizontal, 20)
                 .padding(.top, 28)
                 .padding(.bottom, 40)
             }
+            .pageGuideScroll()
         }
+        .pageGuide(.home)
         #if os(iOS)
         .toolbar(.hidden, for: .navigationBar)
         #endif
@@ -36,7 +40,8 @@ private struct LandingHeader: View {
             Text("Concurrency101")
                 .font(.system(size: DemoLayout.typeSize(34), weight: .regular, design: .serif))
                 .foregroundStyle(DemoTheme.phosphor)
-            Text("Two runtimes. Same questions — who is waiting, does this touch the UI, can this overlap. Pick a world, then Playground, Notes, or Drill. Amber is the main thread; cyan is everything else.")
+                .pageGuideTarget(.home, "purpose")
+            Text("Two runtimes. Same questions — who is waiting, does this touch the UI, can this overlap. Pick a world, then Playground, Sandbox, Notes, or Drill. Amber is the main thread; cyan is everything else.")
                 .font(.system(size: DemoLayout.typeSize(16), design: .serif))
                 .foregroundStyle(Color.white.opacity(0.78))
                 .fixedSize(horizontal: false, vertical: true)

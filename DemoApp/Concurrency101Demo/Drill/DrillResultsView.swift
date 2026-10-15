@@ -26,6 +26,7 @@ struct DrillResultsView: View {
                         accent: session.track.accent
                     )
                 }
+                .pageGuideTarget(.drillResults, "score")
 
                 Button {
                     session.retry()
@@ -40,22 +41,26 @@ struct DrillResultsView: View {
                 .buttonStyle(.plain)
                 .clipShape(RoundedRectangle(cornerRadius: 4, style: .continuous))
                 .padding(.top, 8)
+                .pageGuideTarget(.drillResults, "retry")
 
                 if !session.missedCards.isEmpty {
                     DrillOutlineButton(title: "Review misses", accent: session.track.accent) {
                         session.reviewMisses()
                     }
+                    .pageGuideTarget(.drillResults, "review")
                 }
 
                 DrillOutlineButton(title: "Change difficulty", accent: session.track.accent) {
                     session.changeDifficulty()
                 }
+                .pageGuideTarget(.drillResults, "difficulty")
             }
             .padding(.horizontal, 20)
             .padding(.top, 28)
             .padding(.bottom, 40)
             .frame(maxWidth: 640, alignment: .leading)
         }
+        .pageGuideScroll()
     }
 }
 

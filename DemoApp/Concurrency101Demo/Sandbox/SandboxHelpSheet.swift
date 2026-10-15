@@ -50,10 +50,12 @@ struct SandboxHelpSheet: View {
                                         .fixedSize(horizontal: false, vertical: true)
                                 }
                             }
+                            .pageGuideTarget(.sandboxHelp, guideStep(for: section.title), enabled: section.title != "What it models")
                         }
                     }
                     .padding(20)
                 }
+                .pageGuideScroll()
             }
             .navigationTitle("How the Sandbox works")
             .demoRoomChrome()
@@ -63,6 +65,16 @@ struct SandboxHelpSheet: View {
                         .foregroundStyle(accent)
                 }
             }
+            .pageGuide(.sandboxHelp, accent: accent)
+        }
+        .pageGuideHost()
+    }
+
+    private func guideStep(for title: String) -> String {
+        switch title {
+        case "What it doesn't": "limits"
+        case "Reading the output": "legend"
+        default: "model"
         }
     }
 }

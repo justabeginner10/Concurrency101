@@ -40,6 +40,7 @@ struct SandboxView: View {
                     .padding(.horizontal, 16)
                     .padding(.bottom, 24)
                 }
+                .pageGuideScroll()
             } else {
                 VStack(alignment: .leading, spacing: 12) {
                     SandboxHeader(track: track)
@@ -70,8 +71,10 @@ struct SandboxView: View {
                         .frame(width: 28, height: 28)
                 }
                 .accessibilityLabel("How the Sandbox works")
+                .pageGuideTarget(.sandbox, "help")
             }
         }
+        .pageGuide(.sandbox, accent: track.accent)
         .sheet(isPresented: $showHelp) {
             SandboxHelpSheet(accent: track.accent)
         }
@@ -175,6 +178,7 @@ private struct SandboxControls: View {
                 .buttonStyle(.plain)
                 .accessibilityLabel("Start from a lesson")
                 .accessibilityValue(session.loadedTitle ?? "Your code")
+                .pageGuideTarget(.sandbox, "lesson")
 
                 Button(action: session.runCode) {
                     Text(session.isRunning ? "Running…" : "Run")
@@ -190,6 +194,7 @@ private struct SandboxControls: View {
                 .disabled(session.isRunning)
                 .keyboardShortcut("r", modifiers: .command)
                 .accessibilityHint("Runs the code on the simulated runtime")
+                .pageGuideTarget(.sandbox, "run")
             }
 
             HStack(spacing: 14) {
@@ -200,6 +205,7 @@ private struct SandboxControls: View {
                 }
                 .disabled(session.isRunning)
                 .accessibilityHint("Runs again with another valid interleaving")
+                .pageGuideTarget(.sandbox, "shuffle")
 
                 Menu {
                     Picker("Cores", selection: Binding(get: { session.cores }, set: { session.cores = $0 })) {
@@ -211,6 +217,7 @@ private struct SandboxControls: View {
                     Label("\(session.cores) cores", systemImage: "cpu")
                 }
                 .menuIndicator(.hidden)
+                .pageGuideTarget(.sandbox, "cores")
 
                 Menu {
                     Picker("Speed", selection: Binding(get: { session.speed }, set: { session.speed = $0 })) {
@@ -222,6 +229,7 @@ private struct SandboxControls: View {
                     Label(session.speed.rawValue, systemImage: "speedometer")
                 }
                 .menuIndicator(.hidden)
+                .pageGuideTarget(.sandbox, "playback")
 
                 Spacer(minLength: 0)
 

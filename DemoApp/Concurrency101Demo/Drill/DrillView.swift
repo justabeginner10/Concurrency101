@@ -47,9 +47,11 @@ struct DrillView: View {
                         }
                     }
                     .foregroundStyle(track.accent)
+                    .pageGuideTarget(.drillQuestion, "leave")
                 }
             }
         }
+        .pageGuide(guidePage, accent: track.accent)
         .alert("Are you sure you want to go back?", isPresented: $confirmLeave) {
             Button("Yes") { dismiss() }
             Button("No", role: .cancel) {}
@@ -74,6 +76,14 @@ struct DrillView: View {
             return ""
         case .running:
             return "\(session.index + 1) / \(session.deck.count)"
+        }
+    }
+
+    private var guidePage: PageGuidePage {
+        switch session.phase {
+        case .lobby: .drillSetup
+        case .running: .drillQuestion
+        case .results: .drillResults
         }
     }
 }

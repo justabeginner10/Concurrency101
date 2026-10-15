@@ -51,6 +51,12 @@ open /Users/adityaraj/Documents/Concurrency101/DemoApp/Concurrency101Demo.xcodep
 
 Pick an iPhone simulator, press Run, choose a track, choose a lesson, tap **Run lesson**. Skip the freeze lessons unless you intend to hang the app (Stop in Xcode to recover).
 
+### Page guides
+
+On the first visit to a screen, a guided tour highlights one real component at a time and explains it in an adjacent tooltip. Next moves the highlight and scrolls the next component into view; Back revisits a step. Skip or Done returns to the screen. The guide includes the hub, rooms, Drill stages, and supporting chooser, reference, and help screens.
+
+Each tour starts automatically once, on the first visit to that screen. Returning or relaunching does not show it again, even if you skipped it or left before finishing. There is no manual trigger. First visits are remembered separately from your learning progress. Only components present on the current screen are included.
+
 ### Sandbox
 
 Each track hub also has a **Sandbox** room (and the Playground's options menu has **Open in Sandbox**). Edit any lesson, or write your own code, and run it on a **simulated runtime** instead of the real one. The runtime is the `Concurrency101Sim` package target: a small Swift interpreter with one main thread, a GCD worker pool, a fixed Swift task pool, actors, queues, and a virtual clock.

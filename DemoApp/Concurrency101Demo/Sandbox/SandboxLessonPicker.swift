@@ -13,12 +13,13 @@ struct SandboxLessonPicker: View {
             List {
                 Section {
                     NavigationLink {
-                        SandboxLessonList(scenarios: scenarios, apple: false, onPick: onPick, onCancel: { dismiss() })
+                        SandboxLessonList(scenarios: scenarios, apple: false, accent: accent, onPick: onPick, onCancel: { dismiss() })
                     } label: {
                         Text("Concurrency101 names")
+                            .pageGuideTarget(.sandboxPicker, "names")
                     }
                     NavigationLink {
-                        SandboxLessonList(scenarios: scenarios, apple: true, onPick: onPick, onCancel: { dismiss() })
+                        SandboxLessonList(scenarios: scenarios, apple: true, accent: accent, onPick: onPick, onCancel: { dismiss() })
                     } label: {
                         Text("Apple API names")
                     }
@@ -30,6 +31,7 @@ struct SandboxLessonPicker: View {
                     Button("Blank editor", role: .destructive) {
                         onPick(nil, false)
                     }
+                    .pageGuideTarget(.sandboxPicker, "blank")
                 }
             }
             .modifier(SandboxPickerListBackground())
@@ -38,9 +40,12 @@ struct SandboxLessonPicker: View {
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") { dismiss() }
+                        .pageGuideTarget(.sandboxPicker, "cancel")
                 }
             }
+            .pageGuide(.sandboxPicker, accent: accent)
         }
+        .pageGuideHost()
         .tint(accent)
         .preferredColorScheme(.dark)
         .presentationBackground(DemoTheme.void)
@@ -56,6 +61,7 @@ struct SandboxLessonPicker: View {
 private struct SandboxLessonList: View {
     let scenarios: [DemoScenario]
     let apple: Bool
+    let accent: Color
     let onPick: (DemoScenario?, Bool) -> Void
     let onCancel: () -> Void
 
@@ -71,6 +77,7 @@ private struct SandboxLessonList: View {
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .contentShape(Rectangle())
                     }
+                    .pageGuideTarget(.sandboxLessons, "lesson", enabled: scenario.id == scenarios.first?.id)
                 }
             } header: {
                 Text(apple ? "Apple API names" : "Concurrency101 names")
@@ -83,8 +90,10 @@ private struct SandboxLessonList: View {
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
                 Button("Cancel", action: onCancel)
+                    .pageGuideTarget(.sandboxLessons, "navigate")
             }
         }
+        .pageGuide(.sandboxLessons, accent: accent)
     }
 }
 

@@ -108,10 +108,12 @@ struct CheatSheetView: View {
 
                     CheatSheetMappingList(rows: mappings)
                     CheatSheetTrapList(traps: traps)
+                        .pageGuideTarget(.cheatSheet, "traps")
                 }
                 .padding(16)
                 .padding(.bottom, 24)
             }
+            .pageGuideScroll()
             .background { DemoTheme.void.ignoresSafeArea() }
             .navigationTitle(track.cheatSheetTitle)
             .demoRoomChrome()
@@ -119,9 +121,12 @@ struct CheatSheetView: View {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Close") { dismiss() }
                         .foregroundStyle(DemoTheme.phosphor)
+                        .pageGuideTarget(.cheatSheet, "close")
                 }
             }
+            .pageGuide(.cheatSheet, accent: track.accent)
         }
+        .pageGuideHost()
         .preferredColorScheme(.dark)
     }
 }
@@ -150,6 +155,7 @@ private struct CheatSheetMappingList: View {
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.vertical, 12)
+                .pageGuideTarget(.cheatSheet, "mapping", enabled: row.id == rows.first?.id)
             }
         }
     }

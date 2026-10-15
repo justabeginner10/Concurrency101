@@ -21,9 +21,10 @@ struct ErrorLogView: View {
                             .font(.system(size: DemoLayout.typeSize(15), design: .serif))
                             .foregroundStyle(DemoTheme.muted)
                             .padding(.top, 8)
+                            .pageGuideTarget(.errorLog, "entries")
                     } else {
                         ForEach(entries) { entry in
-                            ErrorLogRow(entry: entry, accent: track.accent)
+                            ErrorLogRow(entry: entry, accent: track.accent, isGuideExample: entry.id == entries.first?.id)
                         }
                     }
                 }
@@ -32,9 +33,11 @@ struct ErrorLogView: View {
                 .padding(.bottom, 40)
                 .frame(maxWidth: 720, alignment: .leading)
             }
+            .pageGuideScroll()
         }
         .navigationTitle("")
         .demoRoomChrome()
+        .pageGuide(.errorLog, accent: track.accent)
         .onAppear {
             entries = LearningMemory.errorLog(track: track)
         }
@@ -44,6 +47,7 @@ struct ErrorLogView: View {
 private struct ErrorLogRow: View {
     let entry: LearningMiss
     let accent: Color
+    let isGuideExample: Bool
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -56,12 +60,16 @@ private struct ErrorLogRow: View {
                     .font(.system(size: DemoLayout.typeSize(12), design: .monospaced))
                     .foregroundStyle(DemoTheme.muted)
             }
-            labeled("Predicted", entry.predicted)
-            labeled("Actually", entry.actual)
+            VStack(alignment: .leading, spacing: 8) {
+                labeled("Predicted", entry.predicted)
+                labeled("Actually", entry.actual)
+            }
+            .pageGuideTarget(.errorLog, "comparison", enabled: isGuideExample)
             Text(verbatim: entry.why)
                 .font(.system(size: DemoLayout.typeSize(14), design: .serif))
                 .foregroundStyle(Color.white.opacity(0.72))
                 .fixedSize(horizontal: false, vertical: true)
+                .pageGuideTarget(.errorLog, "why", enabled: isGuideExample)
         }
         .padding(14)
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -70,6 +78,7 @@ private struct ErrorLogRow: View {
             Rectangle()
                 .strokeBorder(accent.opacity(0.28), lineWidth: 1)
         }
+        .pageGuideTarget(.errorLog, "entries", enabled: isGuideExample)
     }
 
     private func labeled(_ title: String, _ value: String) -> some View {

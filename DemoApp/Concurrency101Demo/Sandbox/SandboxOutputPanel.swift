@@ -6,6 +6,8 @@ import Concurrency101Sim
 struct SandboxOutputPanel: View {
     @Bindable var session: SandboxSession
     let accent: Color
+    @Environment(\.pageGuideSession) private var guide
+    @State private var tabBeforeGuide: SandboxOutputTab?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -30,30 +32,48 @@ struct SandboxOutputPanel: View {
 
             Divider().overlay(accent.opacity(0.25))
 
-            switch session.tab {
-            case .trace:
-                SandboxTraceList(session: session, accent: accent)
-            case .threads:
-                ScrollView {
-                    VStack(alignment: .leading, spacing: 14) {
-                        if let run = session.run, run.outcome != .compileFailed {
-                            SandboxTimelineView(run: run, playhead: session.isPlaybackDone ? run.endTime : session.playhead, accent: accent)
-                        } else {
-                            SandboxEmptyState()
-                        }
-                        if let run = session.run, session.isPlaybackDone {
-                            SandboxOutcomeCard(run: run)
-                        }
-                    }
-                    .padding(12)
-                }
-            }
+            output
+                .pageGuideTarget(.sandbox, "trace")
+                .pageGuideTarget(.sandbox, "threads")
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        .onChange(of: guide?.activeTargetID) { _, id in
+            if let id {
+                if tabBeforeGuide == nil { tabBeforeGuide = session.tab }
+                if id == PageGuidePage.sandbox.targetID("threads") { session.tab = .threads }
+                if id == PageGuidePage.sandbox.targetID("trace") { session.tab = .trace }
+            } else if let previous = tabBeforeGuide {
+                session.tab = previous
+                tabBeforeGuide = nil
+            }
+        }
         .background(.ultraThinMaterial, in: Rectangle())
         .overlay {
             Rectangle()
                 .strokeBorder(accent.opacity(0.22), lineWidth: 0.5)
+        }
+    }
+
+    @ViewBuilder
+    private var output: some View {
+        switch session.tab {
+        case .trace:
+            SandboxTraceList(session: session, accent: accent)
+        case .threads:
+            ScrollView {
+                VStack(alignment: .leading, spacing: 14) {
+                    if let run = session.run, run.outcome != .compileFailed {
+                        SandboxTimelineView(run: run, playhead: session.isPlaybackDone ? run.endTime : session.playhead, accent: accent)
+                    } else {
+                        SandboxEmptyState()
+                    }
+                    if let run = session.run, session.isPlaybackDone {
+                        SandboxOutcomeCard(run: run)
+                    }
+                }
+                .padding(12)
+            }
+            .pageGuideScroll()
         }
     }
 }
@@ -104,6 +124,7 @@ private struct SandboxTraceList: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(12)
             }
+            .pageGuideScroll()
             .onChange(of: events.count) { _, _ in
                 if let last = events.last {
                     withAnimation(.easeOut(duration: 0.12)) {
@@ -182,6 +203,7 @@ struct SandboxOutcomeCard: View {
         }
         .clipShape(RoundedRectangle(cornerRadius: 4, style: .continuous))
         .accessibilityElement(children: .combine)
+        .pageGuideTarget(.sandbox, "outcome")
     }
 
     private var threadCount: Int {

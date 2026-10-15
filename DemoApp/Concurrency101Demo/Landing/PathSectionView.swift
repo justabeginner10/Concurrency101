@@ -13,6 +13,7 @@ struct PathSectionView: View {
             Text("Path")
                 .font(.system(size: DemoLayout.typeSize(22), design: .serif))
                 .foregroundStyle(track.accent)
+                .pageGuideTarget(.hub, "path")
             Text("Open the note, run the lessons that show it, then take the quiz. A mark means you have been there.")
                 .font(.system(size: DemoLayout.typeSize(15), design: .serif))
                 .foregroundStyle(Color.white.opacity(0.72))
