@@ -118,8 +118,10 @@ struct WorkbenchView: View {
                 WorkbenchOptionsMenu(showCheatSheet: $showCheatSheet, accent: track.accent) {
                     showSandbox = true
                 }
+                .pageGuideTarget(.playground, "options")
             }
         }
+        .pageGuide(.playground, accent: track.accent)
         .alert("This freezes the app", isPresented: $confirmDeadlock) {
             Button("Freeze", role: .destructive) {
                 performRun()
@@ -259,6 +261,7 @@ private struct PhoneWorkbenchLayout: View {
                         onMaximizeCode: onMaximizeCode
                     )
                 }
+                .pageGuideScroll()
                 .padding(.bottom, consoleExpanded ? 348 : 176)
             }
             .padding(.bottom, 8)
@@ -385,6 +388,7 @@ private struct PlaygroundLessonChrome: View {
                 onSelect: onSelect
             )
             .frame(minWidth: 0, maxWidth: .infinity)
+            .pageGuideTarget(.playground, "lesson")
             RunLessonButton(
                 isDestructive: isDestructive,
                 isEnabled: canRun,
@@ -392,6 +396,7 @@ private struct PlaygroundLessonChrome: View {
                 minWidth: DemoLayout.isPadLike ? 168 : 0,
                 action: onRun
             )
+            .pageGuideTarget(.playground, "run")
         }
         .padding(.horizontal, 16)
         .padding(.bottom, 12)
@@ -669,6 +674,7 @@ private struct LessonPredictionBox: View {
                     .foregroundStyle(choice == prediction.correctIndex ? DemoTheme.hit : DemoTheme.freeze)
             }
         }
+        .pageGuideTarget(.playground, "prediction")
     }
 
     private func fill(for index: Int) -> Color {

@@ -16,6 +16,7 @@ struct DrillQuestionView: View {
                     total: session.deck.count,
                     accent: session.track.accent
                 )
+                .pageGuideTarget(.drillQuestion, "progress")
                 DrillQuestionPage(
                     accent: session.track.accent,
                     stem: current.question.stem,
@@ -96,6 +97,7 @@ private struct DrillQuestionPage: View {
                         .font(.system(size: DemoLayout.typeSize(18), design: .serif))
                         .foregroundStyle(Color.white.opacity(0.9))
                         .fixedSize(horizontal: false, vertical: true)
+                        .pageGuideTarget(.drillQuestion, "question")
 
                     if let snippet = snippet?.trimmingCharacters(in: .whitespacesAndNewlines),
                        !snippet.isEmpty {
@@ -114,11 +116,13 @@ private struct DrillQuestionPage: View {
                             )
                         }
                     }
+                    .pageGuideTarget(.drillQuestion, "answers")
                 }
                 .padding(.horizontal, 18)
                 .padding(.top, 16)
                 .padding(.bottom, 24)
             }
+            .pageGuideScroll()
 
             DrillQuestionBar(
                 accent: accent,
@@ -229,13 +233,17 @@ private struct DrillQuestionBar: View {
                 isPresented: $showExplain,
                 onOpenNote: onOpenNote
             )
+            .pageGuideTarget(.drillQuestion, "explain")
             Spacer()
-            Button("Previous", action: onPrevious)
-                .foregroundStyle(previousEnabled ? accent : DemoTheme.muted)
-                .disabled(!previousEnabled)
-            Button("Next", action: onNext)
-                .foregroundStyle(nextEnabled ? accent : DemoTheme.muted)
-                .disabled(!nextEnabled)
+            HStack(spacing: 16) {
+                Button("Previous", action: onPrevious)
+                    .foregroundStyle(previousEnabled ? accent : DemoTheme.muted)
+                    .disabled(!previousEnabled)
+                Button("Next", action: onNext)
+                    .foregroundStyle(nextEnabled ? accent : DemoTheme.muted)
+                    .disabled(!nextEnabled)
+            }
+            .pageGuideTarget(.drillQuestion, "navigation")
         }
         .font(.system(size: DemoLayout.typeSize(13), design: .monospaced))
         .buttonStyle(.plain)
@@ -348,6 +356,7 @@ private struct DrillExplainSheet: View {
                     .font(.system(size: DemoLayout.typeSize(13), design: .monospaced))
                     .foregroundStyle(accent)
                     .buttonStyle(.plain)
+                    .pageGuideTarget(.drillExplanation, "done")
             }
             .padding(.horizontal, 20)
             .padding(.top, 18)
@@ -366,6 +375,7 @@ private struct DrillExplainSheet: View {
                         .font(.system(size: DemoLayout.typeSize(16), design: .serif))
                         .foregroundStyle(Color.white.opacity(0.88))
                         .fixedSize(horizontal: false, vertical: true)
+                        .pageGuideTarget(.drillExplanation, "rule")
                     Text("Source")
                         .font(.system(size: DemoLayout.typeSize(13), design: .monospaced))
                         .foregroundStyle(accent)
@@ -373,6 +383,7 @@ private struct DrillExplainSheet: View {
                     Text(verbatim: sourceNote)
                         .font(.system(size: DemoLayout.typeSize(16), design: .serif))
                         .foregroundStyle(Color.white.opacity(0.88))
+                        .pageGuideTarget(.drillExplanation, "source")
                     if let sourceNoteID {
                         Button {
                             onDismiss()
@@ -399,10 +410,13 @@ private struct DrillExplainSheet: View {
                 .padding(20)
                 .frame(maxWidth: .infinity, alignment: .leading)
             }
+            .pageGuideScroll()
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .background(DemoTheme.void.ignoresSafeArea())
         .preferredColorScheme(.dark)
+        .pageGuide(.drillExplanation, accent: accent)
+        .pageGuideHost()
     }
 }
 

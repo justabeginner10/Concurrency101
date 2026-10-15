@@ -30,11 +30,13 @@ struct DrillLobbyView: View {
                         }
                     }
                 }
+                .pageGuideTarget(.drillSetup, "difficulty")
 
                 if let last = session.lastScore {
                     Text("Last \(session.difficulty.title) run: \(last.hits) / \(last.total)")
                         .font(.system(size: DemoLayout.typeSize(13), design: .monospaced))
                         .foregroundStyle(DemoTheme.muted)
+                        .pageGuideTarget(.drillSetup, "history")
                 }
 
                 if session.pendingMissCount > 0 {
@@ -57,6 +59,7 @@ struct DrillLobbyView: View {
                     .buttonStyle(.plain)
                     .clipShape(RoundedRectangle(cornerRadius: 4, style: .continuous))
                     .padding(.top, 8)
+                    .pageGuideTarget(.drillSetup, "resume")
                 }
 
                 Button {
@@ -78,12 +81,14 @@ struct DrillLobbyView: View {
                 .buttonStyle(.plain)
                 .clipShape(RoundedRectangle(cornerRadius: 4, style: .continuous))
                 .padding(.top, session.hasSavedRun ? 0 : 8)
+                .pageGuideTarget(.drillSetup, "start")
             }
             .padding(.horizontal, 20)
             .padding(.top, 28)
             .padding(.bottom, 40)
             .frame(maxWidth: 640, alignment: .leading)
         }
+        .pageGuideScroll()
     }
 }
 

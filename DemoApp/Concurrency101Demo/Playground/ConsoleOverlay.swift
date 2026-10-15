@@ -41,6 +41,7 @@ struct ConsoleOverlay: View {
             }
             .padding(.horizontal, 14)
             .padding(.vertical, 8)
+            .pageGuideTarget(.playground, "panels")
 
             Divider().overlay(DemoTheme.phosphor.opacity(0.25))
 
@@ -88,6 +89,7 @@ struct ConsoleOverlay: View {
             Rectangle()
                 .strokeBorder(DemoTheme.phosphor.opacity(0.22), lineWidth: 0.5)
         }
+        .pageGuideTarget(.playground, "console")
         .shadow(color: Color.black.opacity(chrome == .docked ? 0.35 : 0), radius: chrome == .docked ? 18 : 0, y: chrome == .docked ? -4 : 0)
     }
 }

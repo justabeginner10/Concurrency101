@@ -22,6 +22,7 @@ struct SandboxEditorPanel: View {
                         .foregroundStyle(accent.opacity(0.85))
                     Spacer(minLength: 8)
                     SandboxSourceToggle(session: session)
+                        .pageGuideTarget(.sandbox, "versions")
                     Button(copied ? "Copied" : "Copy") {
                         copy()
                         copied = true
@@ -36,6 +37,7 @@ struct SandboxEditorPanel: View {
                 Text(verbatim: status)
                     .font(.system(size: DemoLayout.typeSize(11), design: .monospaced))
                     .foregroundStyle(session.errorCount > 0 ? DemoTheme.freeze : DemoTheme.muted)
+                    .pageGuideTarget(.sandbox, "diagnostics")
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 8)
@@ -69,6 +71,7 @@ struct SandboxEditorPanel: View {
                 .strokeBorder(accent.opacity(0.22), lineWidth: 0.5)
         }
         .clipShape(RoundedRectangle(cornerRadius: 4, style: .continuous))
+        .pageGuideTarget(.sandbox, "editor")
     }
 
     private var status: String {

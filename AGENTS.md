@@ -61,6 +61,7 @@ Project: `DemoApp/Concurrency101Demo.xcodeproj`. Target sources: `DemoApp/Concur
 - `Drill/` — lobby, question, explain, results, session, and GCD/Swift question banks. `DrillView.swift` is the room.
 - `Sandbox/` — the simulated-runtime room: `SandboxView` (room), `SandboxSession` (draft, diagnostics, run, playback), editor, output (trace + outcome), timeline, help sheet. Linked to the `Concurrency101Sim` package product.
 - `Learning/` — error log of missed predictions.
+- `Onboarding/` — automatic first-visit page guides, component descriptions, visit state, view targets, and the spotlight tooltip overlay. Update targets and guide copy when a page's controls change. Each guide is offered once, with no manual trigger.
 
 Landing picks a track, then the hub opens a `PathRoom` (Playground, Sandbox, Notes, Drill). Lesson copy stays in `Curriculum/`; `Notes/Curriculum/` is only the reader.
 

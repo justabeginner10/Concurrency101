@@ -23,6 +23,7 @@ struct TrackRoomCards: View {
                 ) {
                     onOpen(room)
                 }
+                .pageGuideTarget(.hub, room.rawValue)
             }
         }
     }

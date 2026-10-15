@@ -11,6 +11,7 @@ struct RootView: View {
                     TrackHubView(track: selected)
                 }
         }
+        .pageGuideHost()
         .preferredColorScheme(.dark)
         .environment(
             \.usesPhoneChrome,

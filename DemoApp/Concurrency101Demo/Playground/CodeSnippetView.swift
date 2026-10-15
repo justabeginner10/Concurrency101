@@ -99,6 +99,7 @@ struct CodeSnippetView: View {
                             .lineLimit(1)
                             .fixedSize()
                     }
+                    .pageGuideTarget(.playground, "versions")
                 }
 
                 Button(copied ? "Copied" : "Copy") {
@@ -141,6 +142,7 @@ struct CodeSnippetView: View {
                 .strokeBorder(DemoTheme.phosphor.opacity(0.22), lineWidth: 0.5)
         }
         .clipShape(RoundedRectangle(cornerRadius: 4, style: .continuous))
+        .pageGuideTarget(.playground, "source", enabled: presentation == .comparison)
     }
 
     private var headerTitle: String {

@@ -31,6 +31,7 @@ struct TrackHubView: View {
                         ContinueButton(target: continueTarget, accent: track.accent) {
                             open(continueTarget)
                         }
+                        .pageGuideTarget(.hub, "continue")
                     }
                     TrackRoomCards(
                         track: track,
@@ -50,14 +51,17 @@ struct TrackHubView: View {
                     ErrorLogLink(count: errorCount, accent: track.accent) {
                         destination = .errorLog
                     }
+                    .pageGuideTarget(.hub, "errors")
                 }
                 .padding(.horizontal, 20)
                 .padding(.top, 20)
                 .padding(.bottom, 40)
             }
+            .pageGuideScroll()
         }
         .navigationTitle("")
         .demoRoomChrome()
+        .pageGuide(.hub, accent: track.accent)
         .onAppear(perform: reload)
         .navigationDestination(item: $destination) { selected in
             switch selected {
